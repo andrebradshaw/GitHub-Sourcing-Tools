@@ -9,7 +9,7 @@ var unq = (arr) => arr.filter((e, p, a) => a.indexOf(e) == p);
 
 var csvTable = (arr) => arr.map(itm => itm.toString().replace(/$/, '\r')).toString().replace(/\r,/g, '\r');
 
-var geoSearchLoc = "Shanghai";
+var geoSearchLoc = "Sweden or Sverige or Stockholm";
 var geoSearch = geoSearchLoc ? new RegExp(geoSearchLoc.replace(/\s+OR\s+/gi, '|').trim(), 'i') : null;
 
 async function getEmailFromProfile(url) {
@@ -24,7 +24,7 @@ async function getEmailFromProfile(url) {
 async function getPatches(link) {
   var res = await fetch(link);
   var html = await res.text();
-  var email = /[\w|\.]+@\S+\.[a-zA-Z]+/.exec(html)[0];
+  var email = reg(/[\w|\.]+@\S+\.[a-zA-Z]+/.exec(html),0);
   return email;
 }
 
@@ -86,8 +86,8 @@ async function getStarGazers(url){
     if(isMatch) filteredFollowers.push(followers[i][1]);
   }
   var pages = cn(doc,'paginate-container')[0] ? Array.from(tn(cn(doc,'paginate-container')[0],'a')) : null;
-  var pageArray = pages ? pages.filter(i=> i.innerText == 'Next') : null;
-  var pageLink = pageArray ? pageArray[0].href : null;
+  var pageArray = pages ? pages.filter(i=> i.innerText == 'Next') : [];
+  var pageLink = pageArray.length > 0 ? pageArray[0].href : null;
 
   var outputObj = {nextPage: pageLink, filteredFollowers: filteredFollowers};
   console.log(outputObj);
@@ -100,10 +100,10 @@ async function getProfileDetails(url,geoSearch) {
   var res = await fetch(url);
   var text = await res.text();
   var doc = new DOMParser().parseFromString(text, 'text/html');
-  var fullname = cn(doc, 'p-name vcard-fullname')[0] ? cn(doc, 'p-name vcard-fullname')[0].innerText.trim() : '';
+  var fullname = cn(doc, 'p-name vcard-fullname')[0] ? cn(doc, 'p-name vcard-fullname')[0].innerText.trim().replace(/,/g,'') : '';
   var vcard = Array.from(tn(cn(doc, 'vcard-details')[0], 'li'))
-  var geo = vcard.filter(elm => elm.getAttribute('itemprop') == 'homeLocation')[0] ? vcard.filter(elm => elm.getAttribute('itemprop') == 'homeLocation')[0].innerText.trim() : '';
-  var empl = vcard.filter(elm => elm.getAttribute('itemprop') == 'worksFor')[0] ? vcard.filter(elm => elm.getAttribute('itemprop') == 'worksFor')[0].innerText.trim() : '';
+  var geo = vcard.filter(elm => elm.getAttribute('itemprop') == 'homeLocation')[0] ? vcard.filter(elm => elm.getAttribute('itemprop') == 'homeLocation')[0].innerText.trim().replace(/,/g,'') : '';
+  var empl = vcard.filter(elm => elm.getAttribute('itemprop') == 'worksFor')[0] ? vcard.filter(elm => elm.getAttribute('itemprop') == 'worksFor')[0].innerText.trim().replace(/,/g,'') : '';
 
   if(geoSearch){
       var emailCheck = await getEmailFromProfile(url);
@@ -136,11 +136,13 @@ async function loopThroughStarGazers(url){
   if(firstRes.filteredFollowers.length > 0) firstRes.filteredFollowers.forEach(u=> profilesToScrape.push(u));
 
   for(var i=0; i<numGazers; i++){
-    var resObj = await getStarGazers(resLink);  
-    await delay(111);
-        resLink = resObj.nextPage; /* overwrites the link from prior iteration*/
-    var resArr = resObj.filteredFollowers;
-    if(resObj.filteredFollowers.length > 0) resObj.filteredFollowers.forEach(u=> profilesToScrape.push(u));
+    if(resLink){
+      var resObj = await getStarGazers(resLink);  
+      await delay(111);
+        resLink = resObj.nextPage; /* overwrites the link from prior iteration */
+      var resArr = resObj.filteredFollowers;
+      if(resObj.filteredFollowers.length > 0) resObj.filteredFollowers.forEach(u=> profilesToScrape.push(u));
+    }
   }
   return profilesToScrape;
 }
