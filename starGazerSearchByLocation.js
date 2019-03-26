@@ -9,7 +9,7 @@ var unq = (arr) => arr.filter((e, p, a) => a.indexOf(e) == p);
 
 var csvTable = (arr) => arr.map(itm => itm.toString().replace(/$/, '\r')).toString().replace(/\r,/g, '\r');
 
-var geoSearchLoc = "Sweden or Sverige or Stockholm";
+var geoSearchLoc = "Shanghai";
 var geoSearch = geoSearchLoc ? new RegExp(geoSearchLoc.replace(/\s+OR\s+/gi, '|').trim(), 'i') : null;
 
 async function getEmailFromProfile(url) {
@@ -61,12 +61,22 @@ async function getHoverCard(userId,geoSearch){
 }
 // getHoverCard();
 
-async function getStarGazers(url){
+
+async function getNumOfStarGazers(url){
   var res = await fetch(url);
   var text = await res.text();
   var doc = new DOMParser().parseFromString(text, 'text/html');
   var repositoryCont = cn(doc, 'repository-content')[0];
   var numGazers = cn(repositoryCont,'Counter')[0] ? parseInt(cn(repositoryCont,'Counter')[0].innerText.replace(/\D+/g, '')) : 0;
+  return numGazers;
+}
+
+async function getStarGazers(url){
+  var res = await fetch(url);
+  var text = await res.text();
+  var doc = new DOMParser().parseFromString(text, 'text/html');
+  var repositoryCont = cn(doc, 'repository-content')[0];
+//   var numGazers = cn(repositoryCont,'Counter')[0] ? parseInt(cn(repositoryCont,'Counter')[0].innerText.replace(/\D+/g, '')) : 0;
   var followers = cn(repositoryCont,'follow-list-name') ? Array.from(cn(repositoryCont,'follow-list-name'))
 .map(i=> [tn(i, 'a')[0].getAttribute('data-hovercard-url').replace(/\D+/g, ''), tn(i, 'a')[0].href]) : [];
   var filteredFollowers = [];
@@ -75,9 +85,13 @@ async function getStarGazers(url){
     var isMatch = await getHoverCard(followers[i][0],geoSearch);
     if(isMatch) filteredFollowers.push(followers[i][1]);
   }
-  var pages = cn(doc,'paginate-container')[0] ? Array.from(tn(cn(doc,'paginate-container')[0],'a')).map() : []
-  //TODO return {nextPage: url, filteredFollowers: filteredFollowers};
-  return filteredFollowers;
+  var pages = cn(doc,'paginate-container')[0] ? Array.from(tn(cn(doc,'paginate-container')[0],'a')) : null;
+  var pageArray = pages ? pages.filter(i=> i.innerText == 'Next') : null;
+  var pageLink = pageArray ? pageArray[0].href : null;
+
+  var outputObj = {nextPage: pageLink, filteredFollowers: filteredFollowers};
+  console.log(outputObj);
+  return outputObj;
 }
 
 
@@ -102,8 +116,7 @@ async function getProfileDetails(url,geoSearch) {
 
 async function downloadCSVofMatches(url) {
   var filename = reg(/(?<=\.com\/).+?\/\w+/.exec(url), 0).replace(/\W+/g, '_');
-  var resArr = await getStarGazers(url);
-//TODO: need a loop through next page. return more than 
+  var resArr = await loopThroughStarGazers(url);
   var temp = [
     ['Full Name', 'Company', 'Location', 'Email', 'Github Url']
   ];
@@ -114,15 +127,22 @@ async function downloadCSVofMatches(url) {
   downloadr(csvTable(temp), filename + '.csv')
 }
 
+async function loopThroughStarGazers(url){
+  var profilesToScrape = [];
+  var numGazers = await getNumOfStarGazers(url);
+  var pagesToLoop = Math.ceil(numGazers/30);
+  var firstRes = await getStarGazers(url);
+  var resLink = firstRes.nextPage;
+  if(firstRes.filteredFollowers.length > 0) firstRes.filteredFollowers.forEach(u=> profilesToScrape.push(u));
 
-
-// if (/\/stargazers/.test(currentPage)) downloadCSVofMatches(currentPage);
-
-//   getStarGazers(currentPage)
-
-/*
-async function loopThroughGazerPages(){
-  getStarGazers(currentPage)
-
+  for(var i=0; i<numGazers; i++){
+    var resObj = await getStarGazers(resLink);  
+    await delay(111);
+        resLink = resObj.nextPage; /* overwrites the link from prior iteration*/
+    var resArr = resObj.filteredFollowers;
+    if(resObj.filteredFollowers.length > 0) resObj.filteredFollowers.forEach(u=> profilesToScrape.push(u));
+  }
+  return profilesToScrape;
 }
-*/
+
+downloadCSVofMatches(currentPage);
