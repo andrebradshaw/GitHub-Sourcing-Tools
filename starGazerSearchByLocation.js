@@ -266,7 +266,7 @@ async function getProfileDetails(url,geoSearch) {
   var text = await res.text();
   var doc = new DOMParser().parseFromString(text, 'text/html');
   var fullname = cn(doc, 'p-name vcard-fullname')[0] ? cn(doc, 'p-name vcard-fullname')[0].innerText.trim().replace(/,/g,'') : '';
-  var vcard = Array.from(tn(cn(doc, 'vcard-details')[0], 'li'))
+  var vcard = Array.from(tn(cn(doc, 'vcard-details')[0], 'li'));
   var geo = vcard.filter(elm => elm.getAttribute('itemprop') == 'homeLocation')[0] ? vcard.filter(elm => elm.getAttribute('itemprop') == 'homeLocation')[0].innerText.trim().replace(/,/g,'') : '';
   var empl = vcard.filter(elm => elm.getAttribute('itemprop') == 'worksFor')[0] ? vcard.filter(elm => elm.getAttribute('itemprop') == 'worksFor')[0].innerText.trim().replace(/,/g,'') : '';
 
@@ -288,12 +288,22 @@ async function loopThroughStarGazers(url,geoSearch){
   if(firstRes.filteredFollowers.length > 0) firstRes.filteredFollowers.forEach(u=> profilesToScrape.push(u));
 
   for(var i=0; i<numGazers; i++){
-    var percentComplete = (Math.round((i/(pagesToLoop)*10000)/100);
-    document.getElementById(popTarget+ "_textarea").innerText = 'Building List...\n'+percentComplete+'% complete';
+    var elips = '';
+    if(/0$|3$|6$/.test(i.toString())){
+      var elips = '.' ;
+    }
+    if(/1$|4$|7$/.test(i.toString())){
+      var elips = '..';
+    }
+    if(/2$|5$|8$/.test(i.toString())){
+      var elips = '...';
+    }                              
+    var percentComplete = Math.round((i/(pagesToLoop)*10000)/100);
+    document.getElementById(popTarget+ "_textarea").innerText = 'Building List'+elips+'\n'+percentComplete+'% complete';
     if(resLink){
       var resObj = await getStarGazers(resLink,geoSearch);  
       await delay(111);
-        resLink = resObj.nextPage; /* overwrites the link from prior iteration */
+      resLink = resObj.nextPage; 
       var resArr = resObj.filteredFollowers;
       if(resObj.filteredFollowers.length > 0) resObj.filteredFollowers.forEach(u=> profilesToScrape.push(u));
     }
@@ -302,7 +312,7 @@ async function loopThroughStarGazers(url,geoSearch){
 }
 
 async function downloadCSVofMatches(url,geoSearch) {
-  var filename = reg(/(?<=\.com\/).+?\/\w+/.exec(url), 0).replace(/\W+/g, '_') + document.getElementById(popTarget+ "_textfile").value.replace(/\s+/g, '_');
+  var filename = reg(/(?<=\.com\/).+?\/\w+/.exec(url), 0).replace(/\W+/g, '_') +'_'+ document.getElementById(popTarget+ "_textfile").value.replace(/\s+/g, '_');
   var resArr = await loopThroughStarGazers(url,geoSearch);
   var temp = [
     ['Full Name', 'Company', 'Location', 'Email', 'Github Url']
@@ -311,14 +321,13 @@ async function downloadCSVofMatches(url,geoSearch) {
     var row = await getProfileDetails(resArr[i], geoSearch);
     if(row.length > 0) temp.push(row);
   }
-  downloadr(csvTable(temp), filename + '.csv')
+  downloadr(csvTable(temp), filename + '.csv');
 }
 
 function initSearchLoop(){
   var geoStr = document.getElementById(popTarget+ "_textfile").value;
-console.log(geoStr)
   var searchG = geoStr ? new RegExp(geoStr.replace(/\s+OR\s+/gi, '|').trim(), 'i') : null;
-  console.log(searchG);
+  document.getElementById(popTarget+ "_textarea").innerText = 'Initializing...';
   downloadCSVofMatches(startPage,searchG);
 }
-createPopTextArea(popTarget)
+createPopTextArea(popTarget);
