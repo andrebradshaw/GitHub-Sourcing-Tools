@@ -28,8 +28,6 @@ async function getTargets(url){
   var targets = followers.concat(following);
   return targets;
 }
-
-
 async function getEmailFromProfile(url) {
   var res = await fetch(url + '?tab=repositories');
   var text = await res.text();
@@ -55,7 +53,6 @@ async function checkEmailPatch(repos) {
   }
 }
 
-
 async function getProfileDetails(url) {
   var parseVcard = (attr) => vcard.filter(elm => elm.getAttribute('itemprop') == attr)[0] ? vcard.filter(elm => elm.getAttribute('itemprop') == attr)[0].innerText.trim().replace(/,/g,'') : '';
   var res = await fetch(url);
@@ -68,7 +65,6 @@ async function getProfileDetails(url) {
   var web =  parseVcard('url');
   var emailCheck = await getEmailFromProfile(url);
   var email = emailCheck && /noreply/i.test(emailCheck) === false ? emailCheck : '';
-  console.log([fullname, empl, geo, email, web, url])
   return [fullname, empl, geo, email, web, url];
 }
 
@@ -87,6 +83,7 @@ async function downloadr(str, name) {
   document.body.removeChild(a);
   window.URL.revokeObjectURL(url);
 }
+
 async function looper(url){
   var two2arr = ['Full Name','Employer','Location','Email','Website','Github'];
   var links = await getTargets(url);
