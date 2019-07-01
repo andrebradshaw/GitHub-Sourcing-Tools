@@ -44,7 +44,8 @@ function parseRepo(doc,type){
   return Array.from(cn(doc,`col-12 d-flex width-full py-4 border-bottom public ${type}`)).map(el=> {
    return {
      repo: reg(/(?<=github.com\/.+?\/).+?$/.exec(tn(el,'a')[0].href),0),
-     lang: cn(el, 'ml-0 mr-3')[0] ? cn(el, 'ml-0 mr-3')[0].innerText.trim() : ''
+     lang: cn(el, 'ml-0 mr-3')[0] ? cn(el, 'ml-0 mr-3')[0].innerText.trim() : '',
+     time: tn(el,'relative-time')[0] ? new Date(tn(el,'relative-time')[0].getAttribute('datetime')).getTime() : 0
    };
   });
 }
@@ -93,4 +94,4 @@ async function loopThroughRepos(path){
   console.log(profile);
 }
 
-loopThroughRepos('npadgett')
+loopThroughRepos('aghecht')
