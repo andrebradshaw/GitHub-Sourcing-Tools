@@ -54,7 +54,7 @@ async function loopThroughRepos(path){
   var res = await getProfileRepoData(`https://github.com/${path}?tab=repositories`);
   var owns = parseRepo(res,'source');
   var forks = parseRepo(res,'fork');
-
+  var fullname = cn(res,'vcard-fullname')[0] ? cn(res,'vcard-fullname')[0].innerText : '';
   var vcard = Array.from(tn(cn(res,'vcard-details ')[0],'li'));
   var geo = prop(vcard,'homeLocation');
   var email = prop(vcard,'email');
@@ -76,15 +76,21 @@ async function loopThroughRepos(path){
     if(patchEmail) email.push(patchEmail); break;
   }
 
+  var langs = unq(owns.map(el=> el.lang).filter(el=> el != ''));
+  var interest = unq(forks.map(el=> el.lang).filter(el=> el != ''));
   var profile = {
+    fullname: fullname,
+    github: 'github.com/'+path,
     geo: geo.toString(),
     worksFor: worksFor.toString(),
-    email: email.length > 0 ? unq(email).toString() : '',
+    email: email.length > 0 ? unq(email).toString() : null,
     website: website.toString(),
-    owns: owns,
-    forks: forks
+    langs: langs.length > 0 ? langs : null,
+    interest: interest.length > 0 ? interest : null,
+    owns: owns.length > 0 ? owns : null,
+    forks: forks.length > 0 ? forks : null
   }
   console.log(profile);
 }
 
-loopThroughRepos('aghecht')
+loopThroughRepos('npadgett')
