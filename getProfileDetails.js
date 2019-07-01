@@ -71,7 +71,7 @@ async function loopThroughRepos(path){
   }
 
   for(var r=0; r<owns.length; r++){
-    var link = `https://github.com/${path}/${owns[r]}/commit/master.patch`;
+    var link = `https://github.com/${path}/${owns[r].repo}/commit/master.patch`;
     var patchEmail = await getPatches(link);
     if(patchEmail) email.push(patchEmail); break;
   }
@@ -87,4 +87,4 @@ async function loopThroughRepos(path){
   console.log(profile);
 }
 
-loopThroughRepos('andrebradshaw')
+loopThroughRepos('aghecht')
