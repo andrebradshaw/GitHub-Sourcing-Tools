@@ -42,10 +42,13 @@ async function getProfileRepoData(url) {
 
 function parseRepo(doc,type){
   return Array.from(cn(doc,`col-12 d-flex width-full py-4 border-bottom public ${type}`)).map(el=> {
+   var stars = cn(el, 'octicon-star')[0] ? cn(el, 'octicon-star')[0].parentElement.innerText.trim() : 0;
    return {
      repo: reg(/(?<=github.com\/.+?\/).+?$/.exec(tn(el,'a')[0].href),0),
      lang: cn(el, 'ml-0 mr-3')[0] ? cn(el, 'ml-0 mr-3')[0].innerText.trim() : '',
-     time: tn(el,'relative-time')[0] ? new Date(tn(el,'relative-time')[0].getAttribute('datetime')).getTime() : 0
+     time: tn(el,'relative-time')[0] ? new Date(tn(el,'relative-time')[0].getAttribute('datetime')).getTime() : 0,
+     stars: stars == 'Unstar' ? 0 : parseInt(stars),
+     forks: cn(el,'octicon octicon-repo-forked')[0] ? parseInt(cn(el,'octicon octicon-repo-forked')[0].parentElement.innerText.trim()) : 0
    };
   });
 }
@@ -79,6 +82,8 @@ async function loopThroughRepos(path){
 
   var langs = unq(owns.map(el=> el.lang).filter(el=> el != ''));
   var interest = unq(forks.map(el=> el.lang).filter(el=> el != ''));
+  var recognized = owns.filter(el=> (el.forks > 0 || el.stars > 0) && el.lang).sort((a,b) => b.time - a.time);
+  
   var profile = {
     fullname: fullname,
     github: 'github.com/'+path,
@@ -89,9 +94,10 @@ async function loopThroughRepos(path){
     langs: langs.length > 0 ? langs : null,
     interest: interest.length > 0 ? interest : null,
     owns: owns.length > 0 ? owns : null,
-    forks: forks.length > 0 ? forks : null
+    forks: forks.length > 0 ? forks : null,
+    recognized: recognized
   }
   console.log(profile);
 }
 
-loopThroughRepos('aghecht')
+loopThroughRepos('andrebradshaw')
