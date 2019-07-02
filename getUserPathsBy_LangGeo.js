@@ -33,9 +33,9 @@ async function gitSearch(obj,p) {
 }
 // gitSearch()
 
-async function loopGitSearch(lang){
+async function loopGitSearch(lang,geoName){
   var containArr = [];
-  var search = {lang: lang, order: "asc", geo: "Atlanta", sort: "repositories"};
+  var search = {lang: lang, order: "asc", geo: geoName, sort: "repositories"};
   var doc = await gitSearch(search,1);
   var results = reg(/[\d,]+(?=\s+users)/.exec(cn(doc,'flex-md-row flex-justify-between')[0].innerText),0).replace(/\D+/g,'');
   var totalPages = results ? parseInt(results) / 10 : 0;
@@ -52,7 +52,7 @@ async function loopGitSearch(lang){
 
   if(totalPages > 100){
     for(var i=1; i<=pages2Loop; i++){
-      var doc2 = await gitSearch({lang: lang, order: "desc", geo: "Atlanta", sort: "repositories"},i);
+      var doc2 = await gitSearch({lang: lang, order: "desc", geo: geoName, sort: "repositories"},i);
       var item2 = Array.from(cn(doc2,'user-list-info')).map(el => reg(/(?<=github.com\/).+/.exec(tn(el,'a')[0].href),0));
       item2.forEach(el=> {if(containArr.every(itm => itm != el)) containArr.push(el)});
       await delay(rando(150)+1500);
@@ -61,21 +61,47 @@ async function loopGitSearch(lang){
 
   if(totalPages > 200){
     for(var i=1; i<=pages2Loop; i++){
-      var doc2 = await gitSearch({lang: lang, order: "desc", geo: "Atlanta", sort: "joined"},i);
+      var doc2 = await gitSearch({lang: lang, order: "desc", geo: geoName, sort: "joined"},i);
       var item2 = Array.from(cn(doc2,'user-list-info')).map(el => reg(/(?<=github.com\/).+/.exec(tn(el,'a')[0].href),0));
       item2.forEach(el=> {if(containArr.every(itm => itm != el)) containArr.push(el)});
       await delay(rando(150)+1500);
     }
     for(var i=1; i<=pages2Loop; i++){
-      var doc2 = await gitSearch({lang: lang, order: "asc", geo: "Atlanta", sort: "joined"},i);
+      var doc2 = await gitSearch({lang: lang, order: "asc", geo: geoName, sort: "joined"},i);
       var item2 = Array.from(cn(doc2,'user-list-info')).map(el => reg(/(?<=github.com\/).+/.exec(tn(el,'a')[0].href),0));
       item2.forEach(el=> {if(containArr.every(itm => itm != el)) containArr.push(el)});
       await delay(rando(150)+1500);
     }
+  }
 
+  if(totalPages > 300){
+    for(var i=1; i<=pages2Loop; i++){
+      var doc2 = await gitSearch({lang: lang, order: "desc", geo: geoName, sort: "followers"},i);
+      var item2 = Array.from(cn(doc2,'user-list-info')).map(el => reg(/(?<=github.com\/).+/.exec(tn(el,'a')[0].href),0));
+      item2.forEach(el=> {if(containArr.every(itm => itm != el)) containArr.push(el)});
+      await delay(rando(150)+1500);
+    }
+    for(var i=1; i<=pages2Loop; i++){
+      var doc2 = await gitSearch({lang: lang, order: "asc", geo: geoName, sort: "followers"},i);
+      var item2 = Array.from(cn(doc2,'user-list-info')).map(el => reg(/(?<=github.com\/).+/.exec(tn(el,'a')[0].href),0));
+      item2.forEach(el=> {if(containArr.every(itm => itm != el)) containArr.push(el)});
+      await delay(rando(150)+1500);
+    }
+    for(var i=1; i<=pages2Loop; i++){
+      var doc2 = await gitSearch({lang: lang, order: "desc", geo: geoName, sort: ""},i);
+      var item2 = Array.from(cn(doc2,'user-list-info')).map(el => reg(/(?<=github.com\/).+/.exec(tn(el,'a')[0].href),0));
+      item2.forEach(el=> {if(containArr.every(itm => itm != el)) containArr.push(el)});
+      await delay(rando(150)+1500);
+    }
+    for(var i=1; i<=pages2Loop; i++){
+      var doc2 = await gitSearch({lang: lang, order: "asc", geo: geoName, sort: ""},i);
+      var item2 = Array.from(cn(doc2,'user-list-info')).map(el => reg(/(?<=github.com\/).+/.exec(tn(el,'a')[0].href),0));
+      item2.forEach(el=> {if(containArr.every(itm => itm != el)) containArr.push(el)});
+      await delay(rando(150)+1500);
+    }
   }
 
   console.log(containArr);
-  downloadr(containArr,lang+'_Atlanta.json')
+  downloadr(containArr,lang+'_'+geoName.replace(/\+/g,'-')+'.json');
 }
-loopGitSearch("Python")
+loopGitSearch("Python",'"New+York"')
