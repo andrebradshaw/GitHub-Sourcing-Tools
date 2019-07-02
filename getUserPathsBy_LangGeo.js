@@ -26,7 +26,7 @@ function downloadr(arr2D, filename) {
 }
 
 async function gitSearch(obj,p) {
-  var res = await fetch(`https://github.com/search?l=${obj.lang}&o=${obj.order}&p=${p}&q=location%3A${obj.geo}&s=${obj.sort}&type=Users&_pjax=%23js-pjax-container`);
+  var res = await fetch(`https://github.com/search?l=${obj.lang}&o=${obj.order}&p=${p}&q=location%3A${obj.geo}&s=${obj.sort}&type=Users`);
   var text = await res.text();
   var doc = new DOMParser().parseFromString(text, 'text/html');
   return doc;
@@ -43,65 +43,34 @@ async function loopGitSearch(lang,geoName){
   var items = Array.from(cn(doc,'user-list-info')).map(el => reg(/(?<=github.com\/).+/.exec(tn(el,'a')[0].href),0));
   items.forEach(el=> {if(containArr.every(itm => itm != el)) containArr.push(el)});
 
-  for(var i=2; i<=pages2Loop; i++){
-    var doc2 = await gitSearch(search,i);
-	var item2 = Array.from(cn(doc2,'user-list-info')).map(el => reg(/(?<=github.com\/).+/.exec(tn(el,'a')[0].href),0));
-	item2.forEach(el=> {if(containArr.every(itm => itm != el)) containArr.push(el)});
-    await delay(rando(150)+1500);
-  }
-
-  if(totalPages > 100){
+  async function loopAlternates(searchObj){
     for(var i=1; i<=pages2Loop; i++){
-      var doc2 = await gitSearch({lang: lang, order: "desc", geo: geoName, sort: "repositories"},i);
+      var doc2 = await gitSearch(searchObj,i);
       var item2 = Array.from(cn(doc2,'user-list-info')).map(el => reg(/(?<=github.com\/).+/.exec(tn(el,'a')[0].href),0));
       item2.forEach(el=> {if(containArr.every(itm => itm != el)) containArr.push(el)});
       await delay(rando(150)+1500);
     }
+  }
+
+  await loopAlternates(search);
+
+  if(totalPages > 100){
+    await loopAlternates({lang: lang, order: "desc", geo: geoName, sort: "repositories"});
   }
 
   if(totalPages > 200){
-    for(var i=1; i<=pages2Loop; i++){
-      var doc2 = await gitSearch({lang: lang, order: "desc", geo: geoName, sort: "joined"},i);
-      var item2 = Array.from(cn(doc2,'user-list-info')).map(el => reg(/(?<=github.com\/).+/.exec(tn(el,'a')[0].href),0));
-      item2.forEach(el=> {if(containArr.every(itm => itm != el)) containArr.push(el)});
-      await delay(rando(150)+1500);
-    }
-    for(var i=1; i<=pages2Loop; i++){
-      var doc2 = await gitSearch({lang: lang, order: "asc", geo: geoName, sort: "joined"},i);
-      var item2 = Array.from(cn(doc2,'user-list-info')).map(el => reg(/(?<=github.com\/).+/.exec(tn(el,'a')[0].href),0));
-      item2.forEach(el=> {if(containArr.every(itm => itm != el)) containArr.push(el)});
-      await delay(rando(150)+1500);
-    }
+    await loopAlternates({lang: lang, order: "desc", geo: geoName, sort: "joined"});
+    await loopAlternates({lang: lang, order: "asc", geo: geoName, sort: "joined"});
   }
 
   if(totalPages > 300){
-    for(var i=1; i<=pages2Loop; i++){
-      var doc2 = await gitSearch({lang: lang, order: "desc", geo: geoName, sort: "followers"},i);
-      var item2 = Array.from(cn(doc2,'user-list-info')).map(el => reg(/(?<=github.com\/).+/.exec(tn(el,'a')[0].href),0));
-      item2.forEach(el=> {if(containArr.every(itm => itm != el)) containArr.push(el)});
-      await delay(rando(150)+1500);
-    }
-    for(var i=1; i<=pages2Loop; i++){
-      var doc2 = await gitSearch({lang: lang, order: "asc", geo: geoName, sort: "followers"},i);
-      var item2 = Array.from(cn(doc2,'user-list-info')).map(el => reg(/(?<=github.com\/).+/.exec(tn(el,'a')[0].href),0));
-      item2.forEach(el=> {if(containArr.every(itm => itm != el)) containArr.push(el)});
-      await delay(rando(150)+1500);
-    }
-    for(var i=1; i<=pages2Loop; i++){
-      var doc2 = await gitSearch({lang: lang, order: "desc", geo: geoName, sort: ""},i);
-      var item2 = Array.from(cn(doc2,'user-list-info')).map(el => reg(/(?<=github.com\/).+/.exec(tn(el,'a')[0].href),0));
-      item2.forEach(el=> {if(containArr.every(itm => itm != el)) containArr.push(el)});
-      await delay(rando(150)+1500);
-    }
-    for(var i=1; i<=pages2Loop; i++){
-      var doc2 = await gitSearch({lang: lang, order: "asc", geo: geoName, sort: ""},i);
-      var item2 = Array.from(cn(doc2,'user-list-info')).map(el => reg(/(?<=github.com\/).+/.exec(tn(el,'a')[0].href),0));
-      item2.forEach(el=> {if(containArr.every(itm => itm != el)) containArr.push(el)});
-      await delay(rando(150)+1500);
-    }
+    await loopAlternates({lang: lang, order: "desc", geo: geoName, sort: "followers"});
+    await loopAlternates({lang: lang, order: "asc", geo: geoName, sort: "followers"});
+    await loopAlternates({lang: lang, order: "desc", geo: geoName, sort: ""});
+    await loopAlternates({lang: lang, order: "asc", geo: geoName, sort: ""});
   }
 
   console.log(containArr);
   downloadr(containArr,lang+'_'+geoName.replace(/\+/g,'-')+'.json');
 }
-loopGitSearch("Python",'"New+York"')
+loopGitSearch("JavaScript",'"New+York"')
