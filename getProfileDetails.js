@@ -47,8 +47,8 @@ function parseRepo(doc,type){
      repo: reg(/(?<=github.com\/.+?\/).+?$/.exec(tn(el,'a')[0].href),0),
      lang: cn(el, 'ml-0 mr-3')[0] ? cn(el, 'ml-0 mr-3')[0].innerText.trim() : '',
      time: tn(el,'relative-time')[0] ? new Date(tn(el,'relative-time')[0].getAttribute('datetime')).getTime() : 0,
-     stars: stars == 'Unstar' ? 0 : parseInt(stars),
-     forks: cn(el,'octicon octicon-repo-forked')[0] ? parseInt(cn(el,'octicon octicon-repo-forked')[0].parentElement.innerText.trim()) : 0
+     stars: stars == 'Unstar' ? 0 : parseInt(stars.replace(/\D+/g,'')),
+     forks: cn(el,'octicon octicon-repo-forked')[0] ? parseInt(cn(el,'octicon octicon-repo-forked')[0].parentElement.innerText.trim().replace(/\D+/g,'')) : 0
    };
   });
 }
@@ -64,6 +64,7 @@ async function loopThroughRepos(path){
   var email = prop(vcard,'email');
   var website = prop(vcard,'url');
   var worksFor = prop(vcard,'worksFor');
+  var bio = cn(res,'p-note user-profile-bio js-user-profile-bio')[0] ? cn(res,'p-note user-profile-bio js-user-profile-bio')[0].innerText.trim() : '';
 
   var pagenate = cn(res,'paginate-container')[0] ? Array.from(tn(cn(res,'paginate-container')[0],'a')).filter(el=> el.innerText == 'Next').map(el=> el.href) : [];
   var pages = Math.ceil(parseInt(cn(res,'UnderlineNav-item mr-0 mr-md-1 mr-lg-3 selected ')[0].innerText.replace(/\D+/g,''))/30);
@@ -86,6 +87,7 @@ async function loopThroughRepos(path){
   
   var profile = {
     fullname: fullname,
+    bio: bio,
     github: 'github.com/'+path,
     geo: geo.toString(),
     worksFor: worksFor.toString(),
@@ -100,4 +102,5 @@ async function loopThroughRepos(path){
   console.log(profile);
 }
 
-loopThroughRepos('andrebradshaw')
+loopThroughRepos('hussien89aa')
+
