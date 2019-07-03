@@ -56,6 +56,7 @@ function parseRepo(doc,type){
 async function loopThroughRepos(path){
   var prop = (arr,str) => arr.filter(el=> el.getAttribute('itemprop') == str).map(el=> el ? el.innerText.trim() : '');
   var res = await getProfileRepoData(`https://github.com/${path}?tab=repositories`);
+  var mainDoc = await getProfileRepoData(`https://github.com/${path}`);
   var owns = parseRepo(res,'source');
   var forks = parseRepo(res,'fork');
   var fullname = cn(res,'vcard-fullname')[0] ? cn(res,'vcard-fullname')[0].innerText : '';
@@ -65,6 +66,8 @@ async function loopThroughRepos(path){
   var website = prop(vcard,'url');
   var worksFor = prop(vcard,'worksFor');
   var bio = cn(res,'p-note user-profile-bio js-user-profile-bio')[0] ? cn(res,'p-note user-profile-bio js-user-profile-bio')[0].innerText.trim() : '';
+  var contributions = Array.from(cn(cn(mainDoc,'graph-before-activity-overview')[0],'day')).map(el=> {return {date: new Date(el.getAttribute('data-date')).getTime(), commits: parseInt(el.getAttribute('data-count'))}}).filter(el=> el.commits);
+  
 
   var pagenate = cn(res,'paginate-container')[0] ? Array.from(tn(cn(res,'paginate-container')[0],'a')).filter(el=> el.innerText == 'Next').map(el=> el.href) : [];
   var pages = Math.ceil(parseInt(cn(res,'UnderlineNav-item mr-0 mr-md-1 mr-lg-3 selected ')[0].innerText.replace(/\D+/g,''))/30);
@@ -97,10 +100,11 @@ async function loopThroughRepos(path){
     interest: interest.length > 0 ? interest : null,
     owns: owns.length > 0 ? owns : null,
     forks: forks.length > 0 ? forks : null,
-    recognized: recognized
+    recognized: recognized,
+    contributions: contributions,
+    totalContributions: contributions.map(el=> el.commits).reduce((a,b) => a+b)
   }
   console.log(profile);
 }
 
 loopThroughRepos('hussien89aa')
-
