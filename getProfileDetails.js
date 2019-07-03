@@ -55,7 +55,7 @@ function parseRepo(doc,type){
   });
 }
 
-async function loopThroughRepos(path){
+async function loopThroughRepos(path,primaryLang){
   var prop = (arr,str) => arr.filter(el=> el.getAttribute('itemprop') == str).map(el=> el ? el.innerText.trim() : '');
   var res = await getProfileRepoData(`https://github.com/${path}?tab=repositories`);
   var mainDoc = await getProfileRepoData(`https://github.com/${path}`);
@@ -79,13 +79,13 @@ async function loopThroughRepos(path){
     parseRepo(res2,'fork').forEach(el=> forks.push(el));
     parseRepo(res2,'source').forEach(el=> owns.push(el));
   }
-
-  for(var r=0; r<owns.length; r++){
-    var link = `https://github.com/${path}/${owns[r].repo}/commit/master.patch`;
-    var patchEmail = await getPatches(link);
-    if(patchEmail) {console.log(patchEmail); email.push(patchEmail); break};
+  if(email == null){
+    for(var r=0; r<owns.length; r++){
+      var link = `https://github.com/${path}/${owns[r].repo}/commit/master.patch`;
+      var patchEmail = await getPatches(link);
+      if(patchEmail) {console.log(patchEmail); email.push(patchEmail); break};
+    }
   }
-
   var langs = unq(owns.map(el=> el.lang).filter(el=> el != ''));
   var interest = unq(forks.map(el=> el.lang).filter(el=> el != ''));
   var recognized = owns.filter(el=> (el.forks > 0 || el.stars > 0) && el.lang).sort((a,b) => b.time - a.time);
@@ -94,6 +94,7 @@ async function loopThroughRepos(path){
     fullname: fullname,
     bio: bio,
     github: 'github.com/'+path,
+    primaryLang: primaryLang,
     geo: geo ? geo.toString(): null,
     worksFor: worksFor ? worksFor.toString() : null,
     email: email && email.length > 0 ? unq(email).toString() : null,
@@ -109,13 +110,13 @@ async function loopThroughRepos(path){
   return profile;
 }
 
-async function loopThroughUserPaths(){
+async function loopThroughUserPaths(primaryLang){
   var containArr = [];
   for(var i=0; i<userpaths.length; i++){
-    var res = await loopThroughRepos(userpaths[i]);
+    var res = await loopThroughRepos(userpaths[i],primaryLang);
     containArr.push(res);
     await delay(rando(205)+2100);
   }
   downloadr(containArr,'typescript_ATL_users.json');
 }
-loopThroughUserPaths()
+loopThroughUserPaths('TypeScript')
