@@ -91,20 +91,20 @@ async function loopThroughRepos(path,primaryLang){
   var recognized = owns.filter(el=> (el.forks > 0 || el.stars > 0) && el.lang).sort((a,b) => b.time - a.time);
   
   var profile = {
-    fullname: fullname,
-    bio: bio,
+    fullname: fullname ? fullname : null,
+    bio: bio ? bio : null,
     github: 'github.com/'+path,
     primaryLang: primaryLang,
     geo: geo ? geo.toString(): null,
-    worksFor: worksFor ? worksFor.toString() : null,
+    worksFor: worksFor && worksFor.length > 0 ? worksFor.toString() : null,
     email: email && email.length > 0 ? unq(email).toString() : null,
-    website: website ? website.toString() : null,
+    website: website && website.length > 0 ? website.toString() : null,
     langs: langs && langs.length > 0 ? langs : null,
     interest: interest && interest.length > 0 ? interest : null,
     owns: owns.length > 0 ? owns : null,
     forks: forks.length > 0 ? forks : null,
-    recognized: recognized,
-    contributions: contributions,
+    recognized: recognized && recognized.length > 0 ? recognized : null,
+    contributions: contributions && contributions.length > 0 ? contributions : null,
     totalContributions: contributions && contributions.length > 0 ? contributions.map(el=> el.commits).reduce((a,b) => a+b) : null
   }
   return profile;
