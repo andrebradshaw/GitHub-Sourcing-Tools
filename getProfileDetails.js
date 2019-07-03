@@ -1,3 +1,5 @@
+var userpaths = ["rswarthout","DeepatAchieveIt","mmartimo","ncrawlins","Bertacus","vijayparne","wwiatt","kennethyeung815","akashlinasayed","jwoodall3","PTC-LLC","smarkle","joxford-soltech","anilsehgal-onscale","9001-Solutions","musaviOne","cjdenterprises","rebagaines","SimpleC-LLC","akarel","Stfb","pgadirajuot","ttaylor904","SirPenguinis","TimLafferty","Graterio","maahishri","koushlendr","shaynasymons","donhmorris","samyap4","Crawlity","laupietro","kirubhaalex","casmith109","SUPPLYcom","pfwingard","sleeperninja","Tiffisrite","jesus-novologic","davidhartman","MarionMOwen","dueckery","evanseeds","kneyugn","tomcbean","om2chinna","juhisharma21","umarsayyad","lionelsanou","yzhangcnx","76grady","BGit4586","matthewerwin","lukemarkey","GirishGedala27","9001-Sols","michaelmoose","tsellis","ravindragaikwad","steadyapp","ProlificBlueprint","semicolonmel","TrueValor","CPGToolbox","webdev-office-hours","MonkRocker","sundaran-rm","sredeker","ClueRide","mbpopova","instanceofnull","Shaggy13spe","chrishutchison9","kishorehere82","wjohnson-soltech","mtamburr","GeorgeAnanthSoosai","JustusSGrant","dixson15","mgilbert-incomm","res63661","lenzzol","jkossis","matrixps","PHRESHR","SMK1085","RedPillNow","carlosmorales125","scotthankinson","fjmorel","folsomwg","claytonkucera","spicywhitefish","codertd","mhelmstadter","Johnnyhoboy","undeniablyrob","Berrydoo","esaburruss","zhengbli","Tiamatt","WeihuaZhu","dreslan","mtgibbs","pwalters04","leifwells","derekberger","sam11385","ttruongatl"];
+
 var reg = (o, n) => o ? o[n] : '';
 var cn = (o, s) => o ? o.getElementsByClassName(s) : console.log(o);
 var tn = (o, s) => o ? o.getElementsByTagName(s) : console.log(o);
@@ -60,17 +62,17 @@ async function loopThroughRepos(path){
   var owns = parseRepo(res,'source');
   var forks = parseRepo(res,'fork');
   var fullname = cn(res,'vcard-fullname')[0] ? cn(res,'vcard-fullname')[0].innerText : '';
-  var vcard = Array.from(tn(cn(res,'vcard-details ')[0],'li'));
-  var geo = prop(vcard,'homeLocation');
-  var email = prop(vcard,'email');
-  var website = prop(vcard,'url');
-  var worksFor = prop(vcard,'worksFor');
+  var vcard = cn(res,'vcard-details ')[0] ? Array.from(tn(cn(res,'vcard-details ')[0],'li')) : null;
+  var geo = vcard ? prop(vcard,'homeLocation') : null;
+  var email = vcard ? prop(vcard,'email') : null;
+  var website = vcard ? prop(vcard,'url') : null;
+  var worksFor = vcard ? prop(vcard,'worksFor') : null;
   var bio = cn(res,'p-note user-profile-bio js-user-profile-bio')[0] ? cn(res,'p-note user-profile-bio js-user-profile-bio')[0].innerText.trim() : '';
-  var contributions = Array.from(cn(cn(mainDoc,'graph-before-activity-overview')[0],'day')).map(el=> {return {date: new Date(el.getAttribute('data-date')).getTime(), commits: parseInt(el.getAttribute('data-count'))}}).filter(el=> el.commits);
+  var contributions = cn(mainDoc,'graph-before-activity-overview')[0] ? Array.from(cn(cn(mainDoc,'graph-before-activity-overview')[0],'day')).map(el=> {return {date: new Date(el.getAttribute('data-date')).getTime(), commits: parseInt(el.getAttribute('data-count'))}}).filter(el=> el.commits) : null;
   
 
   var pagenate = cn(res,'paginate-container')[0] ? Array.from(tn(cn(res,'paginate-container')[0],'a')).filter(el=> el.innerText == 'Next').map(el=> el.href) : [];
-  var pages = Math.ceil(parseInt(cn(res,'UnderlineNav-item mr-0 mr-md-1 mr-lg-3 selected ')[0].innerText.replace(/\D+/g,''))/30);
+  var pages = cn(res,'UnderlineNav-item mr-0 mr-md-1 mr-lg-3 selected ')[0] ? Math.ceil(parseInt(cn(res,'UnderlineNav-item mr-0 mr-md-1 mr-lg-3 selected ')[0].innerText.replace(/\D+/g,''))/30) : 0;
 
   for(var i=2; i<=pages; i++){
     var res2 = await getProfileRepoData(pagenate[0]);
@@ -81,7 +83,7 @@ async function loopThroughRepos(path){
   for(var r=0; r<owns.length; r++){
     var link = `https://github.com/${path}/${owns[r].repo}/commit/master.patch`;
     var patchEmail = await getPatches(link);
-    if(patchEmail) email.push(patchEmail); break;
+    if(patchEmail) {console.log(patchEmail); email.push(patchEmail); break};
   }
 
   var langs = unq(owns.map(el=> el.lang).filter(el=> el != ''));
@@ -92,19 +94,28 @@ async function loopThroughRepos(path){
     fullname: fullname,
     bio: bio,
     github: 'github.com/'+path,
-    geo: geo.toString(),
-    worksFor: worksFor.toString(),
-    email: email.length > 0 ? unq(email).toString() : null,
-    website: website.toString(),
-    langs: langs.length > 0 ? langs : null,
-    interest: interest.length > 0 ? interest : null,
+    geo: geo ? geo.toString(): null,
+    worksFor: worksFor ? worksFor.toString() : null,
+    email: email && email.length > 0 ? unq(email).toString() : null,
+    website: website ? website.toString() : null,
+    langs: langs && langs.length > 0 ? langs : null,
+    interest: interest && interest.length > 0 ? interest : null,
     owns: owns.length > 0 ? owns : null,
     forks: forks.length > 0 ? forks : null,
     recognized: recognized,
     contributions: contributions,
-    totalContributions: contributions.map(el=> el.commits).reduce((a,b) => a+b)
+    totalContributions: contributions && contributions.length > 0 ? contributions.map(el=> el.commits).reduce((a,b) => a+b) : null
   }
-  console.log(profile);
+  return profile;
 }
 
-loopThroughRepos('hussien89aa')
+async function loopThroughUserPaths(){
+  var containArr = [];
+  for(var i=0; i<userpaths.length; i++){
+    var res = await loopThroughRepos(userpaths[i]);
+    containArr.push(res);
+    await delay(rando(205)+2100);
+  }
+  downloadr(containArr,'typescript_ATL_users.json');
+}
+loopThroughUserPaths()
