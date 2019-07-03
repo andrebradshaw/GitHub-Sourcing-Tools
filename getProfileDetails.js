@@ -79,7 +79,7 @@ async function loopThroughRepos(path,primaryLang){
     parseRepo(res2,'fork').forEach(el=> forks.push(el));
     parseRepo(res2,'source').forEach(el=> owns.push(el));
   }
-  if(email == null){
+  if(email == null || email.length == 0){
     for(var r=0; r<owns.length; r++){
       var link = `https://github.com/${path}/${owns[r].repo}/commit/master.patch`;
       var patchEmail = await getPatches(link);
