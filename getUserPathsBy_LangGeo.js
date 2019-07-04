@@ -4,6 +4,11 @@ var tn = (o, s) => o ? o.getElementsByTagName(s) : console.log(o);
 var gi = (o, s) => o ? o.getElementById(s) : console.log(o);
 var rando = (n) => Math.round(Math.random() * n);
 var delay = (ms) => new Promise(res => setTimeout(res, ms));
+var unq = (arr) => arr.filter((e, p, a) => a.indexOf(e) == p);
+var delay = (ms) => new Promise(res => setTimeout(res, ms));
+var ele = (t) => document.createElement(t);
+var attr = (o, k, v) => o.setAttribute(k, v);
+
 
 function downloadr(arr2D, filename) {
   var data = /\.json$|.js$/.test(filename) ? JSON.stringify(arr2D) : arr2D.map(el=> el.reduce((a,b) => a+'\t'+b )).reduce((a,b) => a+'\r'+b);
@@ -44,20 +49,23 @@ async function loopGitSearch(lang,geoName){
 
   var results = getTotalResults(doc);
   var totalPages = getTotalPages(results);
-  var pages2Loop = getPages2Loop(totalPages);
+//   var pages2Loop = getPages2Loop(totalPages);
 
 //   var items = Array.from(cn(doc,'user-list-info')).map(el => reg(/(?<=github.com\/).+/.exec(tn(el,'a')[0].href),0));
 //   items.forEach(el=> {if(containArr.every(itm => itm != el)) containArr.push(el)});
 
   async function loopAlternates(searchObj,ordr){
     var check = await gitSearch(search,1,'desc');
-    var loops = getPages2Loop(getTotalPages(getTotalResults(check)));
+    var strRes = getTotalResults(check);
+    var t_pages = getTotalPages(strRes);
+    var loops = getPages2Loop(t_pages);
+
     console.log(loops);
 
     for(var i=1; i<=loops; i++){
       var doc2 = await gitSearch(searchObj,i,'desc');
       var item2 = Array.from(cn(doc2,'user-list-info')).map(el => reg(/(?<=github.com\/).+/.exec(tn(el,'a')[0].href),0));
-      item2.forEach(el=> {if(containArr.every(itm => itm != el)) containArr.push(el)});
+      item2.forEach(el=> containArr.push(el));
       await delay(rando(150)+1500);
     }
 
@@ -65,10 +73,15 @@ async function loopGitSearch(lang,geoName){
       for(var i=1; i<=loops; i++){
         var doc2 = await gitSearch(searchObj,i,'asc');
         var item2 = Array.from(cn(doc2,'user-list-info')).map(el => reg(/(?<=github.com\/).+/.exec(tn(el,'a')[0].href),0));
-        item2.forEach(el=> {if(containArr.every(itm => itm != el)) containArr.push(el)});
+        item2.forEach(el=> containArr.push(el));
         await delay(rando(150)+1500);
       }
     }
+  }
+
+console.log(totalPages);
+  if(totalPages > 100){
+    var doc = await gitSearch(search,1,'asc');
   }
 
   if(totalPages > 200){
