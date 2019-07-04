@@ -82,8 +82,8 @@ async function loopGitSearch(lang,geoName){
   }
 
   if(totalPages > 400){
-    await loopAlternates({lang: lang, geo: geoName, sort: "", follower: "", repos, "+repos%3A>25"});
-    await loopAlternates({lang: lang, geo: geoName, sort: "", follower: "", repos, "+repos%3A<25"});
+    await loopAlternates({lang: lang, geo: geoName, sort: "", follower: "", repos: "+repos%3A>25"});
+    await loopAlternates({lang: lang, geo: geoName, sort: "", follower: "", repos: "+repos%3A<25"});
 
     await loopAlternates({lang: lang, geo: geoName, sort: "", follower: "+followers%3A<5", repos: "+repos%3A>10"});
     await loopAlternates({lang: lang, geo: geoName, sort: "", follower: "+followers%3A<5", repos: "+repos%3A<10"});
