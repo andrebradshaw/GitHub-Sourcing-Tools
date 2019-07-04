@@ -25,49 +25,103 @@ function downloadr(arr2D, filename) {
   }
 }
 
-async function gitSearch(obj,p) {
-  var res = await fetch(`https://github.com/search?o=${obj.order}&p=${p}&q=location%3A${obj.geo}+language%3A${obj.lang}&s=${obj.sort}&type=Users`);
+async function gitSearch(obj,p,ordr) {
+  var res = await fetch(`https://github.com/search?o=${ordr}&p=${p}&q=location%3A${obj.geo}+language%3A${obj.lang}${obj.follower}&s=${obj.sort}${obj.repos}&type=Users`);
   var text = await res.text();
   var doc = new DOMParser().parseFromString(text, 'text/html');
   return doc;
 }
 
 async function loopGitSearch(lang,geoName){
-  var containArr = [];
-  var search = {lang: lang, order: "asc", geo: geoName, sort: "repositories"};
-  var doc = await gitSearch(search,1);
-  var results = cn(doc,'flex-md-row flex-justify-between')[0] ? reg(/[\d,]+(?=\s+users)/.exec(cn(doc,'flex-md-row flex-justify-between')[0].innerText),0).replace(/\D+/g,'') : 0;
-  var totalPages = results ? parseInt(results) / 10 : 0;
-console.log(totalPages);
-  var pages2Loop = totalPages > 100 ? 100 : totalPages;
-  var items = Array.from(cn(doc,'user-list-info')).map(el => reg(/(?<=github.com\/).+/.exec(tn(el,'a')[0].href),0));
-  items.forEach(el=> {if(containArr.every(itm => itm != el)) containArr.push(el)});
+  var getTotalResults = (d) => cn(d,'flex-md-row flex-justify-between')[0] ? reg(/[\d,]+(?=\s+users)/.exec(cn(d,'flex-md-row flex-justify-between')[0].innerText),0).replace(/\D+/g,'') : 0;
+  var getTotalPages = (s) => s ? parseInt(s) / 10 : 0;
+  var getPages2Loop = (s) => s > 100 ? 100 : s;
 
-  async function loopAlternates(searchObj){
-    for(var i=1; i<=pages2Loop; i++){
-      var doc2 = await gitSearch(searchObj,i);
+  var containArr = [];
+  var search = {lang: lang, geo: geoName, sort: "repositories", follower: "", repos: ""};
+
+  var doc = await gitSearch(search,1,'desc');
+
+  var results = getTotalResults(doc);
+  var totalPages = getTotalPages(results);
+  var pages2Loop = getPages2Loop(totalPages);
+
+//   var items = Array.from(cn(doc,'user-list-info')).map(el => reg(/(?<=github.com\/).+/.exec(tn(el,'a')[0].href),0));
+//   items.forEach(el=> {if(containArr.every(itm => itm != el)) containArr.push(el)});
+
+  async function loopAlternates(searchObj,ordr){
+    var check = await gitSearch(search,1,'desc');
+    var loops = getPages2Loop(getTotalPages(getTotalResults(check)));
+    console.log(loops);
+    for(var i=1; i<=loops; i++){
+      var doc2 = await gitSearch(searchObj,i,'desc');
       var item2 = Array.from(cn(doc2,'user-list-info')).map(el => reg(/(?<=github.com\/).+/.exec(tn(el,'a')[0].href),0));
-      item2.forEach(el=> containArr.push(el));
+      item2.forEach(el=> {if(containArr.every(itm => itm != el)) containArr.push(el)});
       await delay(rando(150)+1500);
+    }
+    if(loops > 100){
+      for(var i=1; i<=loops; i++){
+        var doc2 = await gitSearch(searchObj,i,'asc');
+        var item2 = Array.from(cn(doc2,'user-list-info')).map(el => reg(/(?<=github.com\/).+/.exec(tn(el,'a')[0].href),0));
+        item2.forEach(el=> {if(containArr.every(itm => itm != el)) containArr.push(el)});
+        await delay(rando(150)+1500);
+      }      
     }
   }
 
   await loopAlternates(search);
 
   if(totalPages > 100){
-    await loopAlternates({lang: lang, order: "desc", geo: geoName, sort: "repositories"});
+    await loopAlternates({lang: lang, order: "desc", geo: geoName, sort: "repositories", follower: "", repos, ""});
   }
 
   if(totalPages > 200){
-    await loopAlternates({lang: lang, order: "desc", geo: geoName, sort: "joined"});
-    await loopAlternates({lang: lang, order: "asc", geo: geoName, sort: "joined"});
+    await loopAlternates({lang: lang, geo: geoName, sort: "joined", follower: "", repos, ""});
+    await loopAlternates({lang: lang, geo: geoName, sort: "joined", follower: "", repos, ""});
+    await loopAlternates({lang: lang, geo: geoName, sort: "", follower: "", repos, "+repos%3A>10"});
+    await loopAlternates({lang: lang, geo: geoName, sort: "", follower: "", repos, "+repos%3A<10"});
   }
 
   if(totalPages > 300){
-    await loopAlternates({lang: lang, order: "desc", geo: geoName, sort: "followers"});
-    await loopAlternates({lang: lang, order: "asc", geo: geoName, sort: "followers"});
-    await loopAlternates({lang: lang, order: "desc", geo: geoName, sort: ""});
-    await loopAlternates({lang: lang, order: "asc", geo: geoName, sort: ""});
+    await loopAlternates({lang: lang, geo: geoName, sort: "followers", follower: "", repos, ""});
+    await loopAlternates({lang: lang, geo: geoName, sort: "followers", follower: "", repos, ""});
+
+    await loopAlternates({lang: lang, geo: geoName, sort: "", follower: "+followers%3A>5", repos, ""});
+    await loopAlternates({lang: lang, geo: geoName, sort: "", follower: "+followers%3A>5", repos, ""});
+  }
+
+  if(totalPages > 400){
+    await loopAlternates({lang: lang, geo: geoName, sort: "", follower: "", repos, "+repos%3A>25"});
+    await loopAlternates({lang: lang, geo: geoName, sort: "", follower: "", repos, "+repos%3A<25"});
+
+    await loopAlternates({lang: lang, geo: geoName, sort: "", follower: "+followers%3A<5", repos, "+repos%3A>10"});
+    await loopAlternates({lang: lang, geo: geoName, sort: "", follower: "+followers%3A<5", repos, "+repos%3A<10"});
+
+    await loopAlternates({lang: lang, geo: geoName, sort: "", follower: "+followers%3A>5", repos, "+repos%3A>10"});
+    await loopAlternates({lang: lang, geo: geoName, sort: "", follower: "+followers%3A>5", repos, "+repos%3A<10"});
+  }
+
+  if(totalPages > 500){
+    await loopAlternates({lang: lang, geo: geoName, sort: "", follower: "+followers%3A<5", repos, "+repos%3A>25"});
+    await loopAlternates({lang: lang, geo: geoName, sort: "", follower: "+followers%3A<5", repos, "+repos%3A<25"});
+
+    await loopAlternates({lang: lang, geo: geoName, sort: "", follower: "+followers%3A>5", repos, "+repos%3A>25"});
+    await loopAlternates({lang: lang, geo: geoName, sort: "", follower: "+followers%3A>5", repos, "+repos%3A<25"});
+
+    await loopAlternates({lang: lang, geo: geoName, sort: "", follower: "+followers%3A<5", repos, "+repos%3A>5"});
+    await loopAlternates({lang: lang, geo: geoName, sort: "", follower: "+followers%3A<5", repos, "+repos%3A<5"});
+
+    await loopAlternates({lang: lang, geo: geoName, sort: "", follower: "+followers%3A>5", repos, "+repos%3A>5"});
+    await loopAlternates({lang: lang, geo: geoName, sort: "", follower: "+followers%3A>5", repos, "+repos%3A<5"});
+  }
+
+  if(totalPages > 500){
+    await loopAlternates({lang: lang, geo: geoName, sort: "", follower: "+followers%3A<10", repos, "+repos%3A>5"});
+    await loopAlternates({lang: lang, geo: geoName, sort: "", follower: "+followers%3A<10", repos, "+repos%3A<5"});
+
+    await loopAlternates({lang: lang, geo: geoName, sort: "", follower: "+followers%3A>5", repos, "+repos%3A>50"});
+    await loopAlternates({lang: lang, geo: geoName, sort: "", follower: "+followers%3A>10", repos, "+repos%3A<50"});
+    await loopAlternates({lang: lang, geo: geoName, sort: "", follower: "+followers%3A<200", repos, "+repos%3A>50"});
   }
 
   console.log(containArr);
