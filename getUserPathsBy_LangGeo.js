@@ -57,7 +57,7 @@ async function loopGitSearch(lang,geoName){
     var t_pages = getTotalPages(strRes);
     var loops = getPages2Loop(t_pages);
 
-    console.log(loops);
+    console.log(t_pages);
 
     for(var i=1; i<=loops; i++){
       var doc2 = await gitSearch(searchObj,i,'desc');
@@ -66,7 +66,7 @@ async function loopGitSearch(lang,geoName){
       await delay(rando(150)+1500);
     }
 
-    if(loops > 100){
+    if(t_pages > 100){
       for(var i=1; i<=loops; i++){
         var doc2 = await gitSearch(searchObj,i,'asc');
         var item2 = Array.from(cn(doc2,'user-list-info')).map(el => reg(/(?<=github.com\/).+/.exec(tn(el,'a')[0].href),0));
@@ -76,7 +76,7 @@ async function loopGitSearch(lang,geoName){
     }
   }
 
-  if(totalPages > 100){
+  if(totalPages){
     await loopAlternates(search,totalPages);
   }
 
