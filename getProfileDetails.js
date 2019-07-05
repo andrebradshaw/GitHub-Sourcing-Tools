@@ -1,5 +1,3 @@
-var userpaths = ["rswarthout","DeepatAchieveIt","mmartimo","ncrawlins","Bertacus","vijayparne","wwiatt","kennethyeung815","akashlinasayed","jwoodall3","PTC-LLC","smarkle","joxford-soltech","anilsehgal-onscale","9001-Solutions","musaviOne","cjdenterprises","rebagaines","SimpleC-LLC","akarel","Stfb","pgadirajuot","ttaylor904","SirPenguinis","TimLafferty","Graterio","maahishri","koushlendr","shaynasymons","donhmorris","samyap4","Crawlity","laupietro","kirubhaalex","casmith109","SUPPLYcom","pfwingard","sleeperninja","Tiffisrite","jesus-novologic","davidhartman","MarionMOwen","dueckery","evanseeds","kneyugn","tomcbean","om2chinna","juhisharma21","umarsayyad","lionelsanou","yzhangcnx","76grady","BGit4586","matthewerwin","lukemarkey","GirishGedala27","9001-Sols","michaelmoose","tsellis","ravindragaikwad","steadyapp","ProlificBlueprint","semicolonmel","TrueValor","CPGToolbox","webdev-office-hours","MonkRocker","sundaran-rm","sredeker","ClueRide","mbpopova","instanceofnull","Shaggy13spe","chrishutchison9","kishorehere82","wjohnson-soltech","mtamburr","GeorgeAnanthSoosai","JustusSGrant","dixson15","mgilbert-incomm","res63661","lenzzol","jkossis","matrixps","PHRESHR","SMK1085","RedPillNow","carlosmorales125","scotthankinson","fjmorel","folsomwg","claytonkucera","spicywhitefish","codertd","mhelmstadter","Johnnyhoboy","undeniablyrob","Berrydoo","esaburruss","zhengbli","Tiamatt","WeihuaZhu","dreslan","mtgibbs","pwalters04","leifwells","derekberger","sam11385","ttruongatl"];
-
 var reg = (o, n) => o ? o[n] : '';
 var cn = (o, s) => o ? o.getElementsByClassName(s) : console.log(o);
 var tn = (o, s) => o ? o.getElementsByTagName(s) : console.log(o);
@@ -69,11 +67,8 @@ async function loopThroughRepos(path,primaryLang){
   var worksFor = vcard ? prop(vcard,'worksFor') : null;
   var bio = cn(res,'p-note user-profile-bio js-user-profile-bio')[0] ? cn(res,'p-note user-profile-bio js-user-profile-bio')[0].innerText.trim() : '';
   var contributions = cn(mainDoc,'graph-before-activity-overview')[0] ? Array.from(cn(cn(mainDoc,'graph-before-activity-overview')[0],'day')).map(el=> {return {date: new Date(el.getAttribute('data-date')).getTime(), commits: parseInt(el.getAttribute('data-count'))}}).filter(el=> el.commits) : null;
-  
-
   var pagenate = cn(res,'paginate-container')[0] ? Array.from(tn(cn(res,'paginate-container')[0],'a')).filter(el=> el.innerText == 'Next').map(el=> el.href) : [];
   var pages = cn(res,'UnderlineNav-item mr-0 mr-md-1 mr-lg-3 selected ')[0] ? Math.ceil(parseInt(cn(res,'UnderlineNav-item mr-0 mr-md-1 mr-lg-3 selected ')[0].innerText.replace(/\D+/g,''))/30) : 0;
-
   for(var i=2; i<=pages; i++){
     var res2 = await getProfileRepoData(pagenate[0]);
     parseRepo(res2,'fork').forEach(el=> forks.push(el));
@@ -89,7 +84,6 @@ async function loopThroughRepos(path,primaryLang){
   var langs = unq(owns.map(el=> el.lang).filter(el=> el != ''));
   var interest = unq(forks.map(el=> el.lang).filter(el=> el != ''));
   var recognized = owns.filter(el=> (el.forks > 0 || el.stars > 0) && el.lang).sort((a,b) => b.time - a.time);
-  
   var profile = {
     fullname: fullname ? fullname : null,
     bio: bio ? bio : null,
@@ -109,14 +103,20 @@ async function loopThroughRepos(path,primaryLang){
   }
   return profile;
 }
-
-async function loopThroughUserPaths(primaryLang){
+async function loopThroughUserPaths(obj,geo){
+  var userpaths = obj.paths;
   var containArr = [];
   for(var i=0; i<userpaths.length; i++){
-    var res = await loopThroughRepos(userpaths[i],primaryLang);
+    var res = await loopThroughRepos(userpaths[i],obj.lang);
     containArr.push(res);
     await delay(rando(205)+2100);
   }
-  downloadr(containArr,'typescript_ATL_users.json');
+  downloadr(containArr,obj.lang+'_'+geo+'_users.json');
 }
-loopThroughUserPaths('TypeScript')
+async function initProfileDownloadLoops(geo){
+  for(var i=0; i<jdat_file.length; i++){
+    await loopThroughUserPaths(jdat_file[i],geo);
+    if(jdat_file[i].paths.length > 100) await delay(rando(505)+10100);
+  }
+}
+initProfileDownloadLoops('Atlanta');
