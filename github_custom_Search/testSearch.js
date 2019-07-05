@@ -24,8 +24,16 @@ function booleanSearch(bool,target){
 }
 
 var repoNameSearch = (arr,str) => arr.filter(el=> el.owns).filter(el => el.owns.some(itm=> booleanSearch(str,itm.repo)));
-var repoLangSearch = (arr,str) => arr.filter(el=> el.owns).filter(el => el.owns.some(itm=> booleanSearch(str,itm.lang)));
 var repoNameOrLangSearch = (arr,str) => arr.filter(el=> el.owns).filter(el => el.owns.some(itm=> booleanSearch(str,itm.lang) || booleanSearch(str,itm.repo)));
-var primaryLangSearch = (arr,str) => arr.filter(el=> el.owns).filter(el => booleanSearch(str,el.primaryLang));
 
-primaryLangSearch(fileArray,'Vim')
+var forkNameSearch = (arr,str) => arr.filter(el=> el.forks).filter(el => el.forks.some(itm=> booleanSearch(str,itm.repo)));
+var forkNameOrLangSearch = (arr,str) => arr.filter(el=> el.forks).filter(el => el.forks.some(itm=> booleanSearch(str,itm.lang) || booleanSearch(str,itm.repo)));
+
+var langSearch = (arr,str) => arr.filter(el=> el.langs).filter(el => el.langs.some(itm=> booleanSearch(str,itm)));
+var interestSearch = (arr,str) => arr.filter(el=> el.interest).filter(el => el.interest.some(itm=> booleanSearch(str,itm)));
+
+var primaryLangSearch = (arr,str) => arr.filter(el=> el.primaryLang).filter(el => booleanSearch(str,el.primaryLang));
+
+var bioSearch = (arr,str) => arr.filter(el=> el.bio).filter(el => booleanSearch(str,el.bio));
+
+forkNameOrLangSearch(fileArray,'"R"')
