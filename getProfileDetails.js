@@ -6,6 +6,12 @@ var rando = (n) => Math.round(Math.random() * n);
 var delay = (ms) => new Promise(res => setTimeout(res, ms));
 var unq = (arr) => arr.filter((e, p, a) => a.indexOf(e) == p);
 
+var cleanObject = (ob) => 
+  Object.entries(ob).reduce((r, [k, v]) => {
+    if(v) { r[k] = v; return r;
+    } else { return r; }
+  }, {});
+
 function downloadr(arr2D, filename) {
   var data = /\.json$|.js$/.test(filename) ? JSON.stringify(arr2D) : arr2D.map(el=> el.reduce((a,b) => a+'\t'+b )).reduce((a,b) => a+'\r'+b);
   var type = /\.json$|.js$/.test(filename) ? 'data:application/json;charset=utf-8,' : 'data:text/plain;charset=utf-8,';
@@ -101,7 +107,7 @@ async function loopThroughRepos(path,primaryLang){
     contributions: contributions && contributions.length > 0 ? contributions : null,
     totalContributions: contributions && contributions.length > 0 ? contributions.map(el=> el.commits).reduce((a,b) => a+b) : null
   }
-  return profile;
+  return cleanObject(profile);
 }
 async function loopThroughUserPaths(obj,geo){
   var userpaths = obj.paths;
