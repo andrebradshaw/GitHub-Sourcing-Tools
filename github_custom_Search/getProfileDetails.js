@@ -32,12 +32,11 @@ function downloadr(arr2D, filename) {
   }
 }
 
-async function getPatches(link,fullname,path) {
+async function getPatches(link) {
   var res = await fetch(link);
   var html = await res.text();
   var email = reg(/[\w\.+]+@\S+\.[a-zA-Z]+/.exec(html.replace(/\w+@users.noreply.github.com|\+.+?(?=@)/g, '')),0);
-  var rstr = 'from:\\W*' + fullname.replace(/\W+/g, '\\W+') + '|from:\\W*' + path.replace(/\W+/g, '\\W+');
-  var check = reg(new RegExp(rstr, 'i').test(html)) && /\w+@users.noreply.github.com/i.test(email) === false ?  email : '';
+  var check = /users.noreply.github.com/i.test(email) ? '' : email;
   return check;
 }
 
@@ -85,7 +84,7 @@ async function loopThroughRepos(path,primaryLang){
   if(email == null || email.length == 0){
     for(var r=0; r<owns.length; r++){
       var link = `https://github.com/${path}/${owns[r].repo}/commit/master.patch`;
-      var patchEmail = await getPatches(link,fullname,path);
+      var patchEmail = await getPatches(link);
       if(patchEmail) {console.log(patchEmail); email.push(patchEmail); break};
     }
   }
