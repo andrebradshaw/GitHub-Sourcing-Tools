@@ -134,6 +134,7 @@ async function loopThroughUserPaths(obj,geo){
 async function initProfileDownloadLoops(geo){
   for(var i=0; i<jdat_file.length; i++){
     await loopThroughUserPaths(jdat_file[i],geo);
+    console.log(jdat_file[i].lang);
     if(jdat_file[i].paths.length > 100) await delay(rando(505)+10100);
   }
 }
