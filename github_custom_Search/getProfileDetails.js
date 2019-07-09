@@ -132,10 +132,10 @@ async function loopThroughUserPaths(obj,geo){
   downloadr(containArr,obj.lang+'_'+geo+'_users.json');
 }
 async function initProfileDownloadLoops(geo){
-  for(var i=0; i<jdat_file.length; i++){
+  for(var i=0; i<fileArray.length; i++){
     await loopThroughUserPaths(jdat_file[i],geo);
-    console.log(jdat_file[i].lang);
-    if(jdat_file[i].paths.length > 100) await delay(rando(505)+10100);
+    console.log(fileArray[i].lang);
+    if(fileArray[i].paths.length > 100) await delay(rando(505)+10100);
   }
 }
 initProfileDownloadLoops('Atlanta');
