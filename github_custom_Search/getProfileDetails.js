@@ -60,6 +60,13 @@ function parseRepo(doc,type){
   });
 }
 
+function getFollowCounts(elm,type){
+  var follower_a = Array.from(tn(elm,'a')).filter(el=> type.test(el.innerText))[0];
+  var follower_s = follower_a ? cn(follower_a,'Counter') : null;
+  var followerCount = follower_s[0] ? parseInt(follower_s[0].innerText.trim()) : 0;
+  return followerCount;
+}
+
 async function loopThroughRepos(path,primaryLang){
   var prop = (arr,str) => arr.filter(el=> el.getAttribute('itemprop') == str).map(el=> el ? el.innerText.trim() : '');
   var res = await getProfileRepoData(`https://github.com/${path}?tab=repositories`);
@@ -72,6 +79,8 @@ async function loopThroughRepos(path,primaryLang){
   var email = vcard ? prop(vcard,'email') : null;
   var website = vcard ? prop(vcard,'url') : null;
   var worksFor = vcard ? prop(vcard,'worksFor') : null;
+  var followers = getFollowCounts(res,/followers/i);
+  var following = getFollowCounts(res,/following/i);
   var bio = cn(res,'p-note user-profile-bio js-user-profile-bio')[0] ? cn(res,'p-note user-profile-bio js-user-profile-bio')[0].innerText.trim() : '';
   var contributions = cn(mainDoc,'graph-before-activity-overview')[0] ? Array.from(cn(cn(mainDoc,'graph-before-activity-overview')[0],'day')).map(el=> {return {date: new Date(el.getAttribute('data-date')).getTime(), commits: parseInt(el.getAttribute('data-count'))}}).filter(el=> el.commits) : null;
   var pagenate = cn(res,'paginate-container')[0] ? Array.from(tn(cn(res,'paginate-container')[0],'a')).filter(el=> el.innerText == 'Next').map(el=> el.href) : [];
@@ -96,6 +105,8 @@ async function loopThroughRepos(path,primaryLang){
     bio: bio ? bio : null,
     github: 'github.com/'+path,
     primaryLang: primaryLang,
+    followers: followers,
+    following: following,
     geo: geo ? geo.toString(): null,
     worksFor: worksFor && worksFor.length > 0 ? worksFor.toString() : null,
     email: email && email.length > 0 ? unq(email) : null,
