@@ -204,7 +204,7 @@ async function loopThroughRepos(path){
 
 async function getMatchingProfiles(geoSearch,targetRepo){
   var containArr = [];
-  var profiles = loopThroughForkersSearchGeo(geoSearch,targetRepo)
+  var profiles = await loopThroughForkersSearchGeo(geoSearch,targetRepo);
   for(var i=0; i<profiles.length; i++){
 	var userj = await loopThroughRepos(profiles[i]);
     containArr.push(userj);
