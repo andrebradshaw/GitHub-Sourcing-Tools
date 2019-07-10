@@ -62,8 +62,8 @@ function parseRepo(doc,type){
 
 function getFollowCounts(elm,type){
   var follower_a = Array.from(tn(elm,'a')).filter(el=> type.test(el.innerText))[0];
-  var follower_s = follower_a ? cn(follower_a,'Counter') : null;
-  var followerCount = follower_s[0] ? parseInt(follower_s[0].innerText.trim()) : 0;
+  var follower_s = follower_a ? cn(follower_a,'Counter')[0] : null;
+  var followerCount = follower_s ? parseInt(follower_s.innerText.trim()) : 0;
   return followerCount;
 }
 
@@ -125,7 +125,7 @@ async function loopThroughUserPaths(obj,geo){
   var userpaths = obj.paths;
   var containArr = [];
   for(var i=0; i<userpaths.length; i++){
-    var res = await loopThroughRepos(userpaths[i],obj.lang);
+    var res = await loopThroughRepos(userpaths[i],obj.lang.replace(/C\s\s/g,'C++'));
     containArr.push(res);
     await delay(rando(205)+2100);
   }
@@ -133,7 +133,7 @@ async function loopThroughUserPaths(obj,geo){
 }
 async function initProfileDownloadLoops(geo){
   for(var i=0; i<fileArray.length; i++){
-    await loopThroughUserPaths(jdat_file[i],geo);
+    await loopThroughUserPaths(fileArray[i],geo);
     console.log(fileArray[i].lang);
     if(fileArray[i].paths.length > 100) await delay(rando(505)+10100);
   }
