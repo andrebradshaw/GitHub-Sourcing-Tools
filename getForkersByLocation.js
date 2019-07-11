@@ -155,7 +155,6 @@ function parseAsRegexArr(bool) {
     var noOrs = bool ? bool.replace(new RegExp(orx, 'g'), '').split(/\s+[AND\s+]+/i) : bool;
     var ands = noOrs ? noOrs.map(function(a) { return rxReady(a)}) : [];
     var xArr = ands.concat(orArr).filter(function(i){ return i != ''}).map(function(x){return new RegExp(x, 'i')});
-    console.log(xArr)
     return xArr;
   }
 }
@@ -172,7 +171,6 @@ async function getHoverCard(userId,geoSearch){
   var text = await res.text();
   var doc = new DOMParser().parseFromString(text, 'text/html');
   var isMatch = booleanSearch(geoSearch,doc.body.innerText);
-  console.log(isMatch);
   return isMatch;
 }
 
@@ -181,8 +179,7 @@ async function getForkerIdsByRepo(path){
   var text = await res.text();
   var doc = new DOMParser().parseFromString(text, 'text/html');
   var repos = Array.from(cn(doc,'repo')).map(el=> 
-	[reg(/(?<=github.com\/).+/.exec(tn(el,'a')[0].href),0), reg(/(?<=user_id=)\d+/.exec(tn(el,'a')[0].getAttribute('data-hovercard-url')),0)] 
-	).filter(el=> el[1]);
+	[reg(/(?<=github.com\/).+/.exec(tn(el,'a')[0].href),0), reg(/(?<=user_id=)\d+/.exec(tn(el,'a')[0].getAttribute('data-hovercard-url')),0)]).filter(el=> el[1]);
   return repos;
 }
 
@@ -193,7 +190,7 @@ async function loopThroughForkersSearchGeo(geoSearch,repoPath){
     gi(document,'download_body_label').innerText = 'Grabbing forker ids... '+(i+1)+' of '+forkers.length;
     var geoMatch = await getHoverCard(forkers[i][1],geoSearch);
     if(geoMatch) matchingProfilePaths.push(forkers[i][0]);
-    await delay(rando(400));    
+    await delay(rando(300));    
   }
   return unq(matchingProfilePaths); 
 }
@@ -310,23 +307,20 @@ async function loopThroughRepos(path){
     recognized: recognized && recognized.length > 0 ? recognized : null,
     contributions: contributions && contributions.length > 0 ? contributions : null,
     totalContributions: contributions && contributions.length > 0 ? contributions.map(el=> el.commits).reduce((a,b) => a+b) : null
-  }
+  };
   return cleanObject(profile);
 }
 
 async function getMatchingProfiles(geoSearch,targetRepo){
   var containArr = [];
   var profiles = await loopThroughForkersSearchGeo(geoSearch,targetRepo);
-console.log(profiles)
   for(var i=0; i<profiles.length; i++){
     gi(document,'download_body_label').innerText = 'Getting profile details... '+(i+1)+' of '+profiles.length;
 	var userj = await loopThroughRepos(profiles[i]);
     containArr.push(userj);
-console.log(userj)
     await delay(rando(133)+1303);
   }
   var output = convertToTSV(containArr);
-console.log(output)
   await delay(1111);
   downloadr(output,geoSearch+'+forks_'+targetRepo+'.tsv');
   gi(document,'download_body_label').innerText = 'Completed';
