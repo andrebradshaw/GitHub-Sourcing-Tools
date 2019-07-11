@@ -9,6 +9,111 @@ var delay = (ms) => new Promise(res => setTimeout(res, ms));
 var ele = (t) => document.createElement(t);
 var attr = (o, k, v) => o.setAttribute(k, v);
 
+function hoverSwitch() { /* { used_in: [mapComanyViews] } */
+  var back = this.style.background;
+  var colr = this.style.color;
+  this.style.background = colr;
+  this.style.color = back;
+  this.style.transition = "all 123ms";
+}
+
+function dragElement() {
+var elmnt = this.parentElement;
+var pos1 = 0,  pos2 = 0,  pos3 = 0,  pos4 = 0;
+if (document.getElementById(this.id)) {
+  document.getElementById(this.id).onmousedown = dragMouseDown;
+} else {
+  this.onmousedown = dragMouseDown;
+}
+
+function dragMouseDown(e) {
+  pos3 = e.clientX;
+  pos4 = e.clientY;
+  document.onmouseup = closeDragElement;
+  document.onmousemove = elementDrag;
+}
+
+function elementDrag(e) {
+  pos1 = pos3 - e.clientX;
+  pos2 = pos4 - e.clientY;
+  pos3 = e.clientX;
+  pos4 = e.clientY;
+  elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+  elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+  elmnt.style.opacity = "0.85";
+  elmnt.style.transition = "opacity 700ms";
+}
+
+function closeDragElement() {
+  document.onmouseup = null;
+  document.onmousemove = null;
+  elmnt.style.opacity = "1";
+}
+}
+
+function createSearchContainer(){
+  if(gi(document, 'download_cont')) gi(document, 'download_cont').outerHTML = '';
+
+ var cont = ele("div");
+  document.body.appendChild(cont);
+  attr(cont, "id", "download_cont");
+  attr(cont, 'style', 'position: fixed; top: 20%; left: 50%; width: 360px; height: 260px; background: transparent; z-index: 12000;');
+
+  var head = ele("div");
+  attr(head, "id", "download_header");
+  attr(head, 'style', 'background: #004471; height: 9%; border: 1.5px solid #004471; border-top-right-radius: 0.25em; border-top-left-radius: 0.25em; padding: 0px; cursor: move;');
+  cont.appendChild(head);
+  head.onmouseover = dragElement;
+
+
+  var closeBtn = ele("div");
+  attr(closeBtn, "id", "search_btn_close");
+  attr(closeBtn, 'style', 'background: transparent; width: 15px; height: 15px; transform: scale(1.8, 1.2) translate(4px, 2px); border-radius: 1em; padding: 0px; color: Crimson; cursor: pointer');
+  head.appendChild(closeBtn);
+  closeBtn.innerText = "X";
+  closeBtn.addEventListener("click", close);
+
+  var body = ele("div");
+  attr(body, "id", "download_body");
+  attr(body, 'style', 'background: #fff; height: 90%; border: 1.5px solid #004471; border-bottom-right-radius: 0.25em; border-bottom-left-radius: 0.25em; padding: 6px;');
+  cont.appendChild(body);
+
+  var dbody = ele("div");
+  attr(dbody, "id", "download_body_type");
+  attr(dbody, 'style', 'background: #fff; border-radius: 0.25em; padding: 6px;');
+  body.appendChild(dbody);
+
+  var label = ele('div');
+  label.innerText = 'Location Search';
+  dbody.appendChild(label);
+
+  var hinput = ele("input");
+  attr(hinput, "id", "geosearch_string");
+  attr(hinput, "placeholder", "Germany OR Finland");
+  attr(hinput, 'style', 'width: 98%; background: #fff; color: #004471; border-radius: 0.25em; border: 1px solid #004471; padding: 6px; cursor: text;');
+  dbody.appendChild(hinput);
+
+  var dlBtn = ele("div");
+  attr(dlBtn, "id", "downloadr_btn");
+  attr(dlBtn, 'style', 'background: #fff; width: 30%; color: #004471; border: 1px solid #004471; border-radius: 0.25em; padding: 6px; cursor: pointer; text-align: center;');
+  dbody.appendChild(dlBtn);
+  dlBtn.innerText = 'Run Search';
+  dlBtn.onmouseover = hoverSwitch;
+  dlBtn.onmouseout = hoverSwitch;
+  dlBtn.onclick = initForkSearch;
+
+  function close() {
+    document.body.removeChild(cont);
+  }
+}
+
+function initForkSearch(){
+  var geoSearch = gi(document,'geosearch_string').value;
+  getMatchingProfiles(geoSearch,reg(/(?<=github.com\/).+?\/.+?(?=\/|$)/.exec(window.location.href),0));
+}
+
+createSearchContainer();
+
 function convertToTSV(fileData) {
   var firstLevel = fileData.map(el => Object.entries(el));
   var lens = Math.max(...firstLevel.map(el => el.length));
@@ -222,4 +327,3 @@ console.log(output)
   await delay(1111);
   downloadr(output,geoSearch+'+forks_'+targetRepo+'.tsv')
 }
-getMatchingProfiles('Florida or "wa" OR "ky"',reg(/(?<=github.com\/).+?\/.+?(?=\/|$)/.exec(window.location.href),0));
