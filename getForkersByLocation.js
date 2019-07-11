@@ -31,6 +31,8 @@ function convertToTSV(fileData) {
     }
     table.push(row);
   }
+  var output = table.map(el => el.map(itm => str(itm)));
+return output;
 }
 
 function parseAsRegexArr(bool) {
@@ -47,6 +49,7 @@ function parseAsRegexArr(bool) {
     var noOrs = bool ? bool.replace(new RegExp(orx, 'g'), '').split(/\s+[AND\s+]+/i) : bool;
     var ands = noOrs ? noOrs.map(function(a) { return rxReady(a)}) : [];
     var xArr = ands.concat(orArr).filter(function(i){ return i != ''}).map(function(x){return new RegExp(x, 'i')});
+    console.log(xArr)
     return xArr;
   }
 }
@@ -62,7 +65,9 @@ async function getHoverCard(userId,geoSearch){
   var res = await fetch("https://github.com/hovercards?user_id="+userId, {"credentials":"include","headers":{"accept":"*/*","accept-language":"en-US,en;q=0.9","x-requested-with":"XMLHttpRequest"}});
   var text = await res.text();
   var doc = new DOMParser().parseFromString(text, 'text/html');
-  return booleanSearch(geoSearch,doc.body.innerText);
+  var isMatch = booleanSearch(geoSearch,doc.body.innerText);
+  console.log(isMatch);
+  return isMatch;
 }
 
 async function getForkerIdsByRepo(path){
@@ -79,7 +84,7 @@ async function loopThroughForkersSearchGeo(geoSearch,repoPath){
   var matchingProfilePaths = [];
   var forkers = await getForkerIdsByRepo(repoPath);
   for(var i=0; i<forkers.length; i++){
-    var geoMatch = await getHoverCard(forkers[i][1]);
+    var geoMatch = await getHoverCard(forkers[i][1],geoSearch);
     if(geoMatch) matchingProfilePaths.push(forkers[i][0]);
     await delay(rando(400));    
   }
@@ -205,13 +210,16 @@ async function loopThroughRepos(path){
 async function getMatchingProfiles(geoSearch,targetRepo){
   var containArr = [];
   var profiles = await loopThroughForkersSearchGeo(geoSearch,targetRepo);
+console.log(profiles)
   for(var i=0; i<profiles.length; i++){
 	var userj = await loopThroughRepos(profiles[i]);
     containArr.push(userj);
+console.log(userj)
     await delay(rando(133)+1303);
   }
   var output = convertToTSV(containArr);
+console.log(output)
   await delay(1111);
   downloadr(output,geoSearch+'+forks_'+targetRepo+'.tsv')
 }
-getMatchingProfiles('Germany','google/shaka-player');
+getMatchingProfiles('Florida or "wa" OR "ky"',reg(/(?<=github.com\/).+?\/.+?(?=\/|$)/.exec(window.location.href),0));
