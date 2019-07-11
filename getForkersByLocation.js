@@ -84,6 +84,7 @@ function createSearchContainer(){
   body.appendChild(dbody);
 
   var label = ele('div');
+  attr(label, "id", "download_body_label");
   label.innerText = 'Location Search';
   dbody.appendChild(label);
 
@@ -189,6 +190,7 @@ async function loopThroughForkersSearchGeo(geoSearch,repoPath){
   var matchingProfilePaths = [];
   var forkers = await getForkerIdsByRepo(repoPath);
   for(var i=0; i<forkers.length; i++){
+    gi(document,'download_body_label').innerText = 'Grabbing forker ids... '+(i+1)+' of '+forkers.length;
     var geoMatch = await getHoverCard(forkers[i][1],geoSearch);
     if(geoMatch) matchingProfilePaths.push(forkers[i][0]);
     await delay(rando(400));    
@@ -317,6 +319,7 @@ async function getMatchingProfiles(geoSearch,targetRepo){
   var profiles = await loopThroughForkersSearchGeo(geoSearch,targetRepo);
 console.log(profiles)
   for(var i=0; i<profiles.length; i++){
+    gi(document,'download_body_label').innerText = 'Getting profile details... '+(i+1)+' of '+profiles.length;
 	var userj = await loopThroughRepos(profiles[i]);
     containArr.push(userj);
 console.log(userj)
@@ -325,5 +328,6 @@ console.log(userj)
   var output = convertToTSV(containArr);
 console.log(output)
   await delay(1111);
-  downloadr(output,geoSearch+'+forks_'+targetRepo+'.tsv')
+  downloadr(output,geoSearch+'+forks_'+targetRepo+'.tsv');
+  gi(document,'download_body_label').innerText = 'Completed';
 }
