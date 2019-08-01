@@ -6,14 +6,6 @@ It doesnt get every profile from a search, but it gets pretty close.
   The larger the search result, the less it gets, but it will get 99% of a 2k search. 
  
 */
-/*
-This will take hours to comeplete if you have more than 1k search results.
-Look in the network tab if you want to see it working. 
-Output is a JSON file.
-It doesnt get every profile from a search, but it gets pretty close. 
-  The larger the search result, the less it gets, but it will get 99% of a 2k search. 
- 
-*/
 var reg = (o, n) => o ? o[n] : '';
 var cn = (o, s) => o ? o.getElementsByClassName(s) : console.log(o);
 var tn = (o, s) => o ? o.getElementsByTagName(s) : console.log(o);
