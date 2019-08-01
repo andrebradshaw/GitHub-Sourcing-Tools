@@ -54,7 +54,7 @@ async function loopGitSearch(){
   var totalPages = getTotalPages(results);
 
   async function loopAlternates(searchObj){
-    var t_url = cleanedUrl+`&s=${searchObj.sort}&o=desc${searchObj.repos}${searchObj.follower}`;
+    var t_url = cleanedUrl.replace(/(?<=&q=.+?)&/, searchObj.repos+searchObj.follower+'&')+`&s=${searchObj.sort}&o=desc`;
 
     var check = await gitSearch(t_url);
     var strRes = getTotalResults(check);
