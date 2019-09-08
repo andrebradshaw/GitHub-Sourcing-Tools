@@ -18,29 +18,36 @@ var parseYearMonths = (n) => {
   return str;
 };
 
-function mapLangPerc(arr){
+function mapLangPerc(arr) {
   var containArr = [];
   var obj = {};
-  var langs = unq(arr.map(el => el.lang).filter(el => el != '')).forEach(el=> obj[el] = []);
-  for(var i=0; i<arr.length; i++){
+  var langs = unq(arr.map(el => el.lang).filter(el => el != '')).forEach(el => obj[el] = []);
+  for (var i = 0; i < arr.length; i++) {
     var obs = Object.entries(obj);
-    for(var o = 0; o<obs.length; o++){
-      if(arr[i].lang == obs[o][0]){
+    for (var o = 0; o < obs.length; o++) {
+      if (arr[i].lang == obs[o][0]) {
         obs[o][1].push(arr[i].time)
       }
     }
   }
   var obe = Object.entries(obj);
-  var total = obe.map(el=> el[1].length).reduce((a,b)=> a+b);
-  for(var i=0; i<obe.length; i++){
+  var total = obe.map(el => el[1].length).reduce((a, b) => a + b);
+  for (var i = 0; i < obe.length; i++) {
     var earliest = Math.min(...obe[i][1]);
     var latest = Math.max(...obe[i][1]);
     var duration = parseYearMonths(latest - earliest);
-    var perc = Math.round((obe[i][1].length / total)*10000)/100;
-    var out = {lang: obe[i][0],percent: perc, start: dateString(earliest), end: dateString(latest), duration: duration};
+    var perc = Math.round((obe[i][1].length / total) * 10000) / 100;
+    var out = {
+      lang: obe[i][0],
+      percent: perc,
+      start: dateString(earliest),
+      end: dateString(latest),
+      duration: duration
+    };
     containArr.push(out)
   }
-  return containArr.sort((a,b)=> a.percent - b.percent).reverse();
+  console.log(containArr)
+  return containArr.sort((a, b) => a.percent - b.percent).reverse();
 }
 
 var cleanObject = (ob) =>
@@ -88,17 +95,13 @@ function getFollowCounts(elm, type) {
   return followerCount;
 }
 
-
-
 async function loopThroughRepos(path) {
   var prop = (arr, str) => arr.filter(el => el.getAttribute('itemprop') == str).map(el => el ? el.innerText.trim() : '');
   var res = await getProfileRepoData(`https://github.com/${path}?tab=repositories`);
-  var mainDoc = await getProfileRepoData(`https://github.com/${path}`);
+  var mainDoc = res; //await getProfileRepoData(`https://github.com/${path}`);
   var owns = parseRepo(res, 'source');
   var forks = parseRepo(res, 'fork');
-  var fullname = cn(res, 'vcard-fullname')[0] ? cn(res, 'vcard-fullname')[0].innerText : '';
   var vcard = cn(res, 'vcard-details ')[0] ? Array.from(tn(cn(res, 'vcard-details ')[0], 'li')) : null;
-  var geo = vcard ? prop(vcard, 'homeLocation') : null;
   var email = vcard ? prop(vcard, 'email') : null;
   var website = vcard ? prop(vcard, 'url') : null;
   var worksFor = vcard ? prop(vcard, 'worksFor') : null;
@@ -119,24 +122,27 @@ async function loopThroughRepos(path) {
     parseRepo(res2, 'source').forEach(el => owns.push(el));
   }
   if (email == null || email.length == 0) {
-    for (var r = (owns.length-1); r > (0 || (owns.length-5)); r++) { /*starts from oldest repo since this is most likely to have an email*/
+    for (var r = (owns.length - 1); r > ((owns.length - 5) || -1); r--) { //starts from oldest repo since this is most likely to have an email
       var link = `https://github.com/${path}/${owns[r].repo}/commit/master.patch`;
       var patchEmail = await getPatches(link);
+      console.log(`${r} of ${owns.length-1}`);
       if (patchEmail) {
         email.push(patchEmail);
-        break
+        console.log(`finished on ${r} of ${owns.length-1}`);
+        r = -1;
+        break;
       };
     }
   }
   var langs = unq(owns.map(el => el.lang).filter(el => el != ''));
   var interest = unq(forks.map(el => el.lang).filter(el => el != ''));
   var recognized = owns.filter(el => (el.forks > 0 || el.stars > 0) && el.lang).sort((a, b) => b.time - a.time);
-  var lastActive = owns && owns.length > 0 ? new Date(Math.max(...owns.map(el=> el.time))) : 'never';
+  var lastActive = owns && owns.length > 0 ? new Date(Math.max(...owns.map(el => el.time))) : 'never';
   var profile = {
     email: email && email.length > 0 ? unq(email).toString() : null,
     website: website && website.length > 0 ? website.toString() : null,
     worksFor: worksFor && worksFor.length > 0 ? worksFor.toString() : null,
-    interest: interest && interest.length > 0 ? interest : null,
+    interests: interest && interest.length > 0 ? interest : null,
     langs: langs && langs.length > 0 ? langs : null,
     repos: owns.length > 0 ? owns : null,
     followers: followers,
@@ -151,48 +157,53 @@ async function loopThroughRepos(path) {
 }
 
 async function getProfileData() {
+  var pagenation = cn(document,'paginate-container codesearch-pagination-container')[0];
+  pagenation.style.position = 'fixed';
+  pagenation.style.top = '0px';
   var cardElms = cn(document, 'user-list-item');
   var paths = cardElms ? Array.from(cardElms).map(el => reg(/(?<=github.com\/).+?(?=\/|$)/.exec(tn(el, 'a')[0].href), 0)) : [];
+  if(cn(cardElms[0],'additional_info_table'[0] == undefined)){
   for (var i = 0; i < paths.length; i++) {
     var cont = cn(cardElms[i], 'user-list-info ml-2 min-width-0')[0];
     var res = await loopThroughRepos(paths[i]);
     if (res) {
       createCard(cont, res);
     }
-  }
+  }}
 }
 
 function createCard(elm, res) {
-  var cont = ele('div');
-  attr(cont, 'style', `border: 1px solid #004471; border-radius: .3em; width: 100%; font-size: 0.75em;`);
-  elm.appendChild(cont);
+    var cont = ele('div');
+    attr(cont, 'class', 'additional_info_table');
+    attr(cont, 'style', `border: 1px solid #004471; border-radius: .3em; width: 100%; font-size: 0.75em;`);
+    elm.appendChild(cont);
 
-  var itms = Object.entries(res).filter(el => el);
-  for (var i = 0; i < itms.length; i++) {
-    var islen = (itms[i][0] == 'recognized' || itms[i][0] == 'forks' || itms[i][0] == 'contributions' || itms[i][0] == 'repos');
-    var txt = islen ? itms[i][1].length : itms[i][1].toString().replace(/,\s*/g, ', ');
-    var txt2 = itms[i][0];
-    var border1 = i != (itms.length - 1) ? ' border-bottom: 1px solid #004471;' : '';
-    var border2 = i != (itms.length - 1) ? ' border-bottom: 1px solid #fff;' : '';
+    var itms = Object.entries(res).filter(el => el);
+    for (var i = 0; i < itms.length; i++) {
+      var islen = (itms[i][0] == 'recognized' || itms[i][0] == 'forks' || itms[i][0] == 'contributions' || itms[i][0] == 'repos');
+      var txt = islen ? itms[i][1].length : itms[i][1].toString().replace(/,\s*/g, ', ');
+      var txt2 = itms[i][0];
+      var border1 = i != (itms.length - 1) ? ' border-bottom: 1px solid #004471;' : '';
+      var border2 = i != (itms.length - 1) ? ' border-bottom: 1px solid #fff;' : '';
 
-    if(txt2 == 'langs'){
-      var info = mapLangPerc(res.repos);
-      info.forEach(el=> {
-        var grid = ele('div');
-        attr(grid, 'style', `display: grid; grid-template-columns: 25% 75%;`);
-        cont.appendChild(grid);
+      if (txt2 == 'langs') {
+        var info = mapLangPerc(res.repos);
+        info.forEach(el => {
+          var grid = ele('div');
+          attr(grid, 'style', `display: grid; grid-template-columns: 25% 75%;`);
+          cont.appendChild(grid);
 
-        var label = ele('div');
-        attr(label, 'style', `grid-area: 1 / 1; background: #004471; color: #fff;${border2} padding: 6px; text-align: center;`);
-        label.innerText = el.lang;
-        grid.appendChild(label);
+          var label = ele('div');
+          attr(label, 'style', `grid-area: 1 / 1; background: hsl(${Math.ceil(220+el.percent)}, 82%, 56%); color: #fff;${border2} padding: 6px; text-align: center;`);
+          label.innerText = el.lang;
+          grid.appendChild(label);
 
-        var val = ele('div');
-        attr(val, 'style', `grid-area: 1 / 2;${border1} padding: 6px;`);
-        val.innerHTML = `${el.percent}% of repos<br>${el.start} to ${el.end} - <i>${el.duration}<i>`;
-        grid.appendChild(val);
-      });
-    }else{
+          var val = ele('div');
+          attr(val, 'style', `grid-area: 1 / 2; ${border1} padding: 6px;`);
+          val.innerHTML = `${el.percent}% of repos<br>${el.start} to ${el.end} <i style="float: right;">${el.duration}</i>`;
+          grid.appendChild(val);
+        });
+      } else {
         var grid = ele('div');
         attr(grid, 'style', `display: grid; grid-template-columns: 25% 75%;`);
         cont.appendChild(grid);
@@ -206,7 +217,7 @@ function createCard(elm, res) {
         attr(val, 'style', `grid-area: 1 / 2;${border1} padding: 6px;`);
         val.innerText = txt;
         grid.appendChild(val);
+      }
     }
-  }  
 }
 getProfileData();
