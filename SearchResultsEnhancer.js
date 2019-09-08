@@ -118,22 +118,22 @@ async function loopThroughRepos(path){
   var interest = unq(forks.map(el=> el.lang).filter(el=> el != ''));
   var recognized = owns.filter(el=> (el.forks > 0 || el.stars > 0) && el.lang).sort((a,b) => b.time - a.time);
   var profile = {
-    fullname: fullname ? fullname : null,
+//     fullname: fullname ? fullname : null,
     bio: bio ? bio : null,
-    github: 'github.com/'+path,
-    followers: followers,
-    following: following,
-    geo: geo ? geo.toString(): null,
-    worksFor: worksFor && worksFor.length > 0 ? worksFor.toString() : null,
     email: email && email.length > 0 ? unq(email).toString() : null,
     website: website && website.length > 0 ? website.toString() : null,
+    geo: geo ? geo.toString(): null,
+    worksFor: worksFor && worksFor.length > 0 ? worksFor.toString() : null,
     langs: langs && langs.length > 0 ? langs : null,
     interest: interest && interest.length > 0 ? interest : null,
-    owns: owns.length > 0 ? owns : null,
+//     github: 'github.com/'+path,
+    followers: followers,
+    following: following,
+    repos: owns.length > 0 ? owns : null,
     forks: forks.length > 0 ? forks : null,
     recognized: recognized && recognized.length > 0 ? recognized : null,
     contributions: contributions && contributions.length > 0 ? contributions : null,
-    totalContributions: contributions && contributions.length > 0 ? contributions.map(el=> el.commits).reduce((a,b) => a+b) : null
+    totalCommits: contributions && contributions.length > 0 ? contributions.map(el=> el.commits).reduce((a,b) => a+b) : null
   };
   return cleanObject(profile);
 }
@@ -158,7 +158,7 @@ function createCard(elm,res){
   
   var itms = Object.entries(res).filter(el=> el);
   for(var i=0; i<itms.length; i++){
-    var islen = (itms[i][0] == 'recognized' || itms[i][0] == 'forks' || itms[i][0] == 'contributions' || itms[i][0] == 'owns' );
+    var islen = (itms[i][0] == 'recognized' || itms[i][0] == 'forks' || itms[i][0] == 'contributions' || itms[i][0] == 'repos' );
       var txt =  islen ? itms[i][1].length : itms[i][1].toString().replace(/,\s*/g,', ');
       var txt2 = itms[i][0];
 
