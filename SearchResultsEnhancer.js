@@ -16,7 +16,7 @@ var parseYearMonths = (n) => {
   var months = Math.round(12 * ((m / 12) - years));
   var str = months && years ? `${years} yr${years>1?'s':''} ${months} mo${months>1?'s':''}` : years && months == 0 ? `${years} year${years>1?'s':''}` : `${months} month${months>1?'s':''}`;
   return str;
-}
+};
 
 function mapLangPerc(arr){
   var containArr = [];
@@ -40,7 +40,6 @@ function mapLangPerc(arr){
     var out = {lang: obe[i][0],percent: perc, start: dateString(earliest), end: dateString(latest), duration: duration};
     containArr.push(out)
   }
-console.log(containArr)
   return containArr.sort((a,b)=> a.percent - b.percent).reverse();
 }
 
