@@ -120,7 +120,7 @@ async function loopThroughRepos(path) {
     parseRepo(res2, 'source').forEach(el => owns.push(el));
   }
   if (email == null || email.length == 0) {
-    for (var r = (owns.length-1); r > (0 || (owns.length-5)); r++) { //starts from oldest repo since this is most likely to have an email
+    for (var r = (owns.length-1); r > (0 || (owns.length-5)); r++) { /*starts from oldest repo since this is most likely to have an email*/
       var link = `https://github.com/${path}/${owns[r].repo}/commit/master.patch`;
       var patchEmail = await getPatches(link);
       if (patchEmail) {
