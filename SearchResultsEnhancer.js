@@ -164,7 +164,7 @@ function createCard(elm,res){
 
   var email = ele('div');
   attr(email,'style',`border-bottom: 1px solid #004471`);
-  email.innerText = res.email : res.email : '';
+  email.innerText = res.email ? res.email : '';
   cont.appendChild(email);
 
   var employer = ele('div');
@@ -221,5 +221,4 @@ function createCard(elm,res){
 }
 //buildHTMLSummaryProfileData
 getProfileData('andrebradshaw')
-
 
