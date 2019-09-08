@@ -53,7 +53,7 @@ async function getPatches(link) {
   var res = await fetch(link);
   var html = await res.text();
   var email = reg(/\b[\w\.\-\+]+@[\w\-]+\.[a-zA-Z]{2,13}(\.[a-zA-Z]{2,13}|\b)/.exec(html.replace(/\w+@users.noreply.github.com|\+.+?(?=@)/g, '')),0);
-  var check = /users.noreply.github.com/i.test(email) ? '' : email;
+  var check = /users.noreply.github.com|@users.noreply.github/i.test(email) ? '' : email;
   return check;
 }
 
@@ -125,7 +125,7 @@ async function loopThroughRepos(path){
     following: following,
     geo: geo ? geo.toString(): null,
     worksFor: worksFor && worksFor.length > 0 ? worksFor.toString() : null,
-    email: email && email.length > 0 ? unq(email) : null,
+    email: email && email.length > 0 ? unq(email).toString() : null,
     website: website && website.length > 0 ? website.toString() : null,
     langs: langs && langs.length > 0 ? langs : null,
     interest: interest && interest.length > 0 ? interest : null,
@@ -139,14 +139,87 @@ async function loopThroughRepos(path){
 }
 
 async function getProfileData(path){
-  
-  
-  var res = await loopThroughRepos(path);
-  console.log(res);
-  
-  
+  var cardElms = cn(document,'user-list-item');
+  var paths = cardElms ? Array.from(cardElms).map(el=> reg(/(?<=github.com\/).+?(?=\/|$)/.exec(tn(el,'a')[0].href),0)) : [];
+console.log(paths);
+  for(var i=0; i<4; i++){ //paths.length
+    var cont = cn(cardElms[i],'user-list-info ml-2 min-width-0')[0];
+    var res = await loopThroughRepos(paths[i]);
+    if(res){
+      createCard(cont,res);
+    }
+    console.log(res);
+    
+  }  
 }
+function createCard(elm,res){
+  var cont = ele('div');
+  attr(cont,'style',`border: 1px solid #004471`);
+  elm.appendChild(cont);
+  
+  var bio = ele('div');
+  attr(bio,'style',`border-bottom: 1px solid #004471`);
+  bio.innerText = res.bio ? res.bio : '';
+  cont.appendChild(bio);
 
+  var email = ele('div');
+  attr(email,'style',`border-bottom: 1px solid #004471`);
+  email.innerText = res.email : res.email : '';
+  cont.appendChild(email);
+
+  var employer = ele('div');
+  attr(employer,'style',`border-bottom: 1px solid #004471`);
+  employer.innerText = res.worksFor ? `employer: ${res.worksFor}` : '';
+  cont.appendChild(employer);
+
+  var website = ele('div');
+  attr(website,'style',`border-bottom: 1px solid #004471`);
+  website.innerText = res.website ? `website: ${res.website}` : '';
+  cont.appendChild(website);
+
+  var langs = ele('div');
+  attr(langs,'style',`border-bottom: 1px solid #004471`);
+  langs.innerText = res.langs ? `languages: ${res.langs.toString().replace(/,/g,' ')}` : '';
+  cont.appendChild(langs);
+  
+  var interest = ele('div');
+  attr(interest,'style',`border-bottom: 1px solid #004471`);
+  interest.innerText = res.interest ? `interests: ${res.interest.toString().replace(/,/g,' ')}` : '';
+  cont.appendChild(interest);
+  
+  var owns = ele('div');
+  attr(owns,'style',`border-bottom: 1px solid #004471`);
+  owns.innerText = res.owns ? `repos: ${res.owns.length}` : '';
+  cont.appendChild(owns);
+
+  var forks = ele('div');
+  attr(forks,'style',`border-bottom: 1px solid #004471`);
+  forks.innerText = res.forks ? `forks: ${res.forks.length}` : '';
+  cont.appendChild(forks);
+
+  var following = ele('div');
+  attr(following,'style',`border-bottom: 1px solid #004471`);
+  following.innerText = res.following ? `following: ${res.following}` : '';
+  cont.appendChild(following);
+
+  var followers = ele('div');
+  attr(followers,'style',`border-bottom: 1px solid #004471`);
+  followers.innerText = res.followers ? `followers: ${res.followers}` : '';
+  cont.appendChild(followers);
+  
+  var recognized = ele('div');
+  attr(recognized,'style',`border-bottom: 1px solid #004471`);
+  recognized.innerText = res.recognized ? `recognitions: ${res.recognized.length}` : '';
+  cont.appendChild(recognized);
+  
+  var totalContributions = ele('div');
+  attr(totalContributions,'style',`border-bottom: 1px solid #004471`);
+  totalContributions.innerText = res.totalContributions ? `total contributions: ${res.totalContributions}` : '';
+  cont.appendChild(totalContributions);
+ 
+
+}
 //buildHTMLSummaryProfileData
 getProfileData('andrebradshaw')
+
 
