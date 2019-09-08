@@ -9,6 +9,40 @@ var delay = (ms) => new Promise(res => setTimeout(res, ms));
 var ele = (t) => document.createElement(t);
 var attr = (o, k, v) => o.setAttribute(k, v);
 
+var dateString = (s) => new Date(s).toString().replace(/^\S+/, '').replace(/\d\d:\d\d.+/, '').trim().replace(/(?<=[a-zA-Z]{3})\s\d+/, '');
+var parseYearMonths = (n) => {
+  var m = n / 2629800000;
+  var years = Math.trunc(m / 12);
+  var months = Math.round(12 * ((m / 12) - years));
+  var str = months && years ? `${years} yr${years>1?'s':''} ${months} mo${months>1?'s':''}` : years && months == 0 ? `${years} year${years>1?'s':''}` : `${months} month${months>1?'s':''}`;
+  return str;
+}
+
+function mapLangPerc(arr){
+  var containArr = [];
+  var obj = {};
+  var langs = unq(arr.map(el => el.lang).filter(el => el != '')).forEach(el=> obj[el] = []);
+  for(var i=0; i<arr.length; i++){
+    var obs = Object.entries(obj);
+    for(var o = 0; o<obs.length; o++){
+      if(arr[i].lang == obs[o][0]){
+        obs[o][1].push(arr[i].time)
+      }
+    }
+  }
+  var obe = Object.entries(obj);
+  var total = obe.map(el=> el[1].length).reduce((a,b)=> a+b);
+  for(var i=0; i<obe.length; i++){
+    var earliest = Math.min(...obe[i][1]);
+    var latest = Math.max(...obe[i][1]);
+    var duration = parseYearMonths(latest - earliest);
+    var perc = Math.round((obe[i][1].length / total)*10000)/100;
+    var out = {lang: obe[i][0],percent: perc, start: dateString(earliest), end: dateString(latest), duration: duration};
+    containArr.push(out)
+  }
+console.log(containArr)
+  return containArr.sort((a,b)=> a.percent - b.percent).reverse();
+}
 
 var cleanObject = (ob) =>
   Object.entries(ob).reduce((r, [k, v]) => {
@@ -54,6 +88,8 @@ function getFollowCounts(elm, type) {
   var followerCount = follower_s[0] ? parseInt(follower_s[0].innerText.trim()) : 0;
   return followerCount;
 }
+
+
 
 async function loopThroughRepos(path) {
   var prop = (arr, str) => arr.filter(el => el.getAttribute('itemprop') == str).map(el => el ? el.innerText.trim() : '');
@@ -101,11 +137,11 @@ async function loopThroughRepos(path) {
     email: email && email.length > 0 ? unq(email).toString() : null,
     website: website && website.length > 0 ? website.toString() : null,
     worksFor: worksFor && worksFor.length > 0 ? worksFor.toString() : null,
-    langs: langs && langs.length > 0 ? langs : null,
     interest: interest && interest.length > 0 ? interest : null,
+    langs: langs && langs.length > 0 ? langs : null,
+    repos: owns.length > 0 ? owns : null,
     followers: followers,
     following: following,
-    repos: owns.length > 0 ? owns : null,
     forks: forks.length > 0 ? forks : null,
     recognized: recognized && recognized.length > 0 ? recognized : null,
     contributions: contributions && contributions.length > 0 ? contributions : null,
@@ -115,7 +151,7 @@ async function loopThroughRepos(path) {
   return cleanObject(profile);
 }
 
-async function getProfileData(path) {
+async function getProfileData() {
   var cardElms = cn(document, 'user-list-item');
   var paths = cardElms ? Array.from(cardElms).map(el => reg(/(?<=github.com\/).+?(?=\/|$)/.exec(tn(el, 'a')[0].href), 0)) : [];
   for (var i = 0; i < paths.length; i++) {
@@ -124,13 +160,12 @@ async function getProfileData(path) {
     if (res) {
       createCard(cont, res);
     }
-    console.log(res);
   }
 }
 
 function createCard(elm, res) {
   var cont = ele('div');
-  attr(cont, 'style', `border: 1px solid #004471; border-radius: .3em;`);
+  attr(cont, 'style', `border: 1px solid #004471; border-radius: .3em; width: 100%; font-size: 0.75em;`);
   elm.appendChild(cont);
 
   var itms = Object.entries(res).filter(el => el);
@@ -141,22 +176,38 @@ function createCard(elm, res) {
     var border1 = i != (itms.length - 1) ? ' border-bottom: 1px solid #004471;' : '';
     var border2 = i != (itms.length - 1) ? ' border-bottom: 1px solid #fff;' : '';
 
-    var grid = ele('div');
-    attr(grid, 'style', `display: grid; grid-template-columns: 30% 70%;`);
-    cont.appendChild(grid);
+    if(txt2 == 'langs'){
+      var info = mapLangPerc(res.repos);
+      info.forEach(el=> {
+        var grid = ele('div');
+        attr(grid, 'style', `display: grid; grid-template-columns: 25% 75%;`);
+        cont.appendChild(grid);
 
-    var val = ele('div');
-    attr(val, 'style', `grid-area: 1 / 1; background: #004471; color: #fff;${border2} padding: 6px; text-align: center;`);
-    val.innerText = txt2;
-    grid.appendChild(val);
+        var label = ele('div');
+        attr(label, 'style', `grid-area: 1 / 1; background: #004471; color: #fff;${border2} padding: 6px; text-align: center;`);
+        label.innerText = el.lang;
+        grid.appendChild(label);
 
-    var label = ele('div');
-    attr(label, 'style', `grid-area: 1 / 2;${border1} padding: 6px;`);
-    label.innerText = txt;
-    grid.appendChild(label);
+        var val = ele('div');
+        attr(val, 'style', `grid-area: 1 / 2;${border1} padding: 6px;`);
+        val.innerHTML = `${el.percent}% of repos<br>${el.start} to ${el.end} - <i>${el.duration}<i>`;
+        grid.appendChild(val);
+      });
+    }else{
+        var grid = ele('div');
+        attr(grid, 'style', `display: grid; grid-template-columns: 25% 75%;`);
+        cont.appendChild(grid);
 
-  }
+        var label = ele('div');
+        attr(label, 'style', `grid-area: 1 / 1; background: #004471; color: #fff;${border2} padding: 6px; text-align: center;`);
+        label.innerText = txt2;
+        grid.appendChild(label);
 
+        var val = ele('div');
+        attr(val, 'style', `grid-area: 1 / 2;${border1} padding: 6px;`);
+        val.innerText = txt;
+        grid.appendChild(val);
+    }
+  }  
 }
-//buildHTMLSummaryProfileData
-getProfileData('andrebradshaw')
+getProfileData();
