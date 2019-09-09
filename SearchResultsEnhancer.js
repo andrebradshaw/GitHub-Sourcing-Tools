@@ -143,12 +143,12 @@ async function loopThroughRepos(path) {
   var recognized = owns.filter(el => (el.forks > 0 || el.stars > 0) && el.lang).sort((a, b) => b.time - a.time);
   var lastActive = owns && owns.length > 0 ? new Date(Math.max(...owns.map(el => el.time))) : 'never';
   var profile = {
+    repos: owns.length > 0 ? owns : null,
     email: email && email.length > 0 ? unq(email).toString() : null,
     website: website && website.length > 0 ? website.toString() : null,
     worksFor: worksFor && worksFor.length > 0 ? worksFor.toString() : null,
     interests: interest && interest.length > 0 ? interest : null,
     langs: langs && langs.length > 0 ? langs : null,
-    repos: owns.length > 0 ? owns : null,
     followers: followers,
     following: following,
     forks: forks.length > 0 ? forks : null,
@@ -199,17 +199,17 @@ function createCard(elm, res) {
         var info = mapLangPerc(res.repos);
         info.forEach(el => {
           var grid = ele('div');
-          attr(grid, 'style', `display: grid; grid-template-columns: 25% 75%;`);
+          attr(grid, 'style', `display: grid; grid-template-columns: 27% 73%;`);
           cont.appendChild(grid);
 
           var label = ele('div');
           attr(label, 'style', `grid-area: 1 / 1; background: hsl(${Math.ceil(220+el.percent)}, 82%, 56%); color: #fff;${border2} padding: 6px; text-align: center;`);
-          label.innerText = el.lang;
+          label.innerHTML = `<b style="float: left;">${el.lang}</b> <i style="font-size: 0.65em; float: right;">${el.percent}%</i>`;
           grid.appendChild(label);
 
           var val = ele('div');
           attr(val, 'style', `grid-area: 1 / 2; ${border1} padding: 6px;`);
-          val.innerHTML = `${el.percent}% of repos<br>${el.start} to ${el.end} <i style="float: right;">${el.duration}</i>`;
+          val.innerHTML = `${el.start} to ${el.end} <i style="float: right;">${el.duration}</i>`;
           grid.appendChild(val);
         });
       } else {
@@ -219,7 +219,7 @@ function createCard(elm, res) {
         cont.appendChild(grid);
         grid.appendChild(label);
         grid.appendChild(val);
-        attr(grid, 'style', `display: grid; grid-template-columns: 25% 67% 8%;`);
+        attr(grid, 'style', `display: grid; grid-template-columns: 27% 65% 8%;`);
         attr(label, 'style', `grid-area: 1 / 1; background: #004471; color: #fff;${border2} padding: 6px; text-align: center;`);
         attr(val, 'style', `grid-area: 1 / 2;${border1} padding: 6px;`);
         val.innerText = txt;
@@ -227,13 +227,13 @@ function createCard(elm, res) {
 
         if(itms[i][0] == 'email') {
             var li = ele('div');
-            attr(li, 'style', `grid-area: 1 / 3; float: right; ${border1}`);
+            attr(li, 'style', `grid-area: 1 / 3; float: right; cursor: pointer; ${border1}`);
             attr(li, 'data_action',itms[i][1]);
 			grid.appendChild(li);
             li.innerHTML = svgs.li;
             li.onclick = openByEmail;
         }else{
-            attr(grid, 'style', `display: grid; grid-template-columns: 25% 75%;`);
+            attr(grid, 'style', `display: grid; grid-template-columns: 27% 73%;`);
 		}
 
       }
