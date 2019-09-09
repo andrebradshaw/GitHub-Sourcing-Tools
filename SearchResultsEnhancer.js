@@ -19,7 +19,7 @@ var parseYearMonths = (n) => {
 };
 
 var svgs = {
-	li: `<svg viewBox="0 0 80 80" version="1.1"><g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" sketch:type="MSPage"><g sketch:type="MSLayerGroup" /><g sketch:type="MSLayerGroup" stroke="#314E55" stroke-width="2" fill="#81A4E3"><g sketch:type="MSShapeGroup"><path d="M35.9955151,27.6266598 C35.9955151,23.8394326 33.0511715,20.8297982 29.7726613,20.8297982 C27.2676024,20.8297982 25.0529201,20.8297982 23.5815904,23.9999995 C23.3099556,24.5852775 22.9955155,26.2895184 22.9955155,27.1324171 L22.9955155,43.4999995 L15.036777,43.4999989 L15.0367767,22.7102582 L15.0367767,12.455873 L23.3012671,12.455873 L23.7089346,16.5 L23.8873426,16.5 C25.0805776,14.5783603 27.7924258,12.455873 32.6850041,12.455873 C38.6490801,12.455873 43.9955153,17.1766025 43.9955153,25.8297979 L43.9955153,43.4999995 L35.9955151,43.4999995 L35.9955151,27.6266598 Z M4.32081087,8.76648024 C1.71699591,8.76648024 0.036776724,6.92405932 0.036776724,4.64751022 C0.036776724,2.3156217 1.7713812,0.525677812 4.42767319,0.525677812 C7.08396519,0.525677812 8.71170734,2.31466757 8.76609263,4.64751022 C8.76704675,6.92405932 7.08491932,8.76648024 4.32081087,8.76648024 L4.32081087,8.76648024 Z M0.995515537,43.4999995 L0.995515303,12.4558734 L7.98371812,12.4558737 L7.98371835,43.4999999 L0.995515537,43.4999995 Z"/></g></g></g></svg>`
+  li: `<svg viewBox="0 0 83 83"><g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" sketch:type="MSPage"><g sketch:type="MSLayerGroup" /><g transform="translate(20, 2)"; sketch:type="MSLayerGroup" stroke="#314E55" stroke-width="2" fill="#81A4E3"><g sketch:type="MSShapeGroup"><path d="M35.9955151,27.6266598 C35.9955151,23.8394326 33.0511715,20.8297982 29.7726613,20.8297982 C27.2676024,20.8297982 25.0529201,20.8297982 23.5815904,23.9999995 C23.3099556,24.5852775 22.9955155,26.2895184 22.9955155,27.1324171 L22.9955155,43.4999995 L15.036777,43.4999989 L15.0367767,22.7102582 L15.0367767,12.455873 L23.3012671,12.455873 L23.7089346,16.5 L23.8873426,16.5 C25.0805776,14.5783603 27.7924258,12.455873 32.6850041,12.455873 C38.6490801,12.455873 43.9955153,17.1766025 43.9955153,25.8297979 L43.9955153,43.4999995 L35.9955151,43.4999995 L35.9955151,27.6266598 Z M4.32081087,8.76648024 C1.71699591,8.76648024 0.036776724,6.92405932 0.036776724,4.64751022 C0.036776724,2.3156217 1.7713812,0.525677812 4.42767319,0.525677812 C7.08396519,0.525677812 8.71170734,2.31466757 8.76609263,4.64751022 C8.76704675,6.92405932 7.08491932,8.76648024 4.32081087,8.76648024 L4.32081087,8.76648024 Z M0.995515537,43.4999995 L0.995515303,12.4558734 L7.98371812,12.4558737 L7.98371835,43.4999999 L0.995515537,43.4999995 Z"/></g></g></g></svg>`
 };
 
 function mapLangPerc(arr) {
@@ -125,7 +125,7 @@ async function loopThroughRepos(path) {
     parseRepo(res2, 'fork').forEach(el => forks.push(el));
     parseRepo(res2, 'source').forEach(el => owns.push(el));
   }
-  if (email == null || email.length == 0) {
+  if ((email == null || email.length == 0) && owns[0]) {
     for (var r = (owns.length - 1); r > ((owns.length - 5) || -1); r--) { //starts from oldest repo since this is most likely to have an email
       var link = `https://github.com/${path}/${owns[r].repo}/commit/master.patch`;
       var patchEmail = await getPatches(link);
@@ -143,14 +143,14 @@ async function loopThroughRepos(path) {
   var recognized = owns.filter(el => (el.forks > 0 || el.stars > 0) && el.lang).sort((a, b) => b.time - a.time);
   var lastActive = owns && owns.length > 0 ? new Date(Math.max(...owns.map(el => el.time))) : 'never';
   var profile = {
-    repos: owns.length > 0 ? owns : null,
     email: email && email.length > 0 ? unq(email).toString() : null,
+    langs: langs && langs.length > 0 ? langs : null,
     website: website && website.length > 0 ? website.toString() : null,
     worksFor: worksFor && worksFor.length > 0 ? worksFor.toString() : null,
     interests: interest && interest.length > 0 ? interest : null,
-    langs: langs && langs.length > 0 ? langs : null,
     followers: followers,
     following: following,
+    repos: owns.length > 0 ? owns : null,
     forks: forks.length > 0 ? forks : null,
     recognized: recognized && recognized.length > 0 ? recognized : null,
     contributions: contributions && contributions.length > 0 ? contributions : null,
@@ -160,83 +160,112 @@ async function loopThroughRepos(path) {
   return cleanObject(profile);
 }
 
+
+function changePager() {
+  var pagenation = cn(document, 'paginate-container codesearch-pagination-container')[0];
+  if(pagenation){
+  var pageor = ele('div');
+  attr(pageor, 'style', `position: fixed; top: 0px; left: 25%;`);
+  attr(pageor, 'class', 'self_pageor');
+  pageor.innerHTML = pagenation.innerHTML.replace(/class="d-flex d-md-inline-block pagination"/g, 'class="self_paging" ').replace(/href/g, 'data_url');
+  document.body.appendChild(pageor);
+
+  var pages = Array.from(tn(cn(document, 'self_paging')[0], 'a'));
+  for (var i = 0; i < pages.length; i++) {
+    pages[i].style.padding = '5px';
+    pages[i].style.cursor = 'pointer';
+    pages[i].style.border = '1px solid #004471';
+    pages[i].style.background = '#fff';
+    pages[i].style.borderBottomRightRadius = '0.3em';
+    pages[i].style.borderBottomLeftRadius = '0.3em';
+    pages[i].onclick = opener;
+  }
+
+  function opener() {
+    console.log(this.getAttribute('data_url'));
+    window.open(this.getAttribute('data_url'), '_self');
+  }
+  pagenation.outerHTML = '';
+
+  }
+}
+
 async function getProfileData() {
-  var pagenation = cn(document,'paginate-container codesearch-pagination-container')[0];
-  pagenation.style.position = 'fixed';
-  pagenation.style.top = '0px';
+  changePager();
   var cardElms = cn(document, 'user-list-item');
   var paths = cardElms ? Array.from(cardElms).map(el => reg(/(?<=github.com\/).+?(?=\/|$)/.exec(tn(el, 'a')[0].href), 0)) : [];
-  if(cn(cardElms[0],'additional_info_table'[0] == undefined)){
-  for (var i = 0; i < paths.length; i++) {
-    var cont = cn(cardElms[i], 'user-list-info ml-2 min-width-0')[0];
-    var res = await loopThroughRepos(paths[i]);
-    if (res) {
-      createCard(cont, res);
+  if (cn(cardElms[0], 'additional_info_table' [0] == undefined)) {
+    for (var i = 0; i < paths.length; i++) {
+      var cont = cn(cardElms[i], 'user-list-info ml-2 min-width-0')[0];
+      var res = await loopThroughRepos(paths[i]);
+      if (res) {
+        createCard(cont, res);
+      }
     }
-  }}
+  }
 }
 
 function openByEmail() {
-console.log(this.getAttribute('data_action'));
-window.open('https://www.linkedin.com/sales/gmail/profile/proxy/'+this.getAttribute('data_action'),'PRINT', 'height=500, width=300,top=1,left=1');
+  console.log(this.getAttribute('data_action'));
+  window.open('https://www.linkedin.com/sales/gmail/profile/proxy/' + this.getAttribute('data_action'), 'PRINT', 'height=500, width=300,top=1,left=1');
 }
 
 function createCard(elm, res) {
-    var cont = ele('div');
-    attr(cont, 'class', 'additional_info_table');
-    attr(cont, 'style', `border: 1px solid #004471; border-radius: .3em; width: 100%; font-size: 0.75em;`);
-    elm.appendChild(cont);
+  var cont = ele('div');
+  attr(cont, 'class', 'additional_info_table');
+  attr(cont, 'style', `border: 1px solid #004471; border-radius: .3em; width: ${screen.width*0.4}px;; font-size: 0.75em;`);
+  elm.appendChild(cont);
 
-    var itms = Object.entries(res).filter(el => el);
-    for (var i = 0; i < itms.length; i++) {
-      var islen = (itms[i][0] == 'recognized' || itms[i][0] == 'forks' || itms[i][0] == 'contributions' || itms[i][0] == 'repos');
-      var txt = islen ? itms[i][1].length : itms[i][1].toString().replace(/,\s*/g, ', ');
-      var txt2 = itms[i][0];
-      var border1 = i != (itms.length - 1) ? ' border-bottom: 1px solid #004471;' : '';
-      var border2 = i != (itms.length - 1) ? ' border-bottom: 1px solid #fff;' : '';
+  var itms = Object.entries(res).filter(el => el);
+  for (var i = 0; i < itms.length; i++) {
+    var islen = (itms[i][0] == 'recognized' || itms[i][0] == 'forks' || itms[i][0] == 'contributions' || itms[i][0] == 'repos');
+    var txt = islen ? itms[i][1].length : itms[i][1].toString().replace(/,\s*/g, ', ');
+    var txt2 = itms[i][0];
+    var border1 = i != (itms.length - 1) ? ' border-bottom: 1px solid #004471;' : '';
+    var border2 = i != (itms.length - 1) ? ' border-bottom: 1px solid #fff;' : '';
 
-      if (txt2 == 'langs') {
-        var info = mapLangPerc(res.repos);
-        info.forEach(el => {
-          var grid = ele('div');
-          attr(grid, 'style', `display: grid; grid-template-columns: 27% 73%;`);
-          cont.appendChild(grid);
-
-          var label = ele('div');
-          attr(label, 'style', `grid-area: 1 / 1; background: hsl(${Math.ceil(220+el.percent)}, 82%, 56%); color: #fff;${border2} padding: 6px; text-align: center;`);
-          label.innerHTML = `<b style="float: left;">${el.lang}</b> <i style="font-size: 0.65em; float: right;">${el.percent}%</i>`;
-          grid.appendChild(label);
-
-          var val = ele('div');
-          attr(val, 'style', `grid-area: 1 / 2; ${border1} padding: 6px;`);
-          val.innerHTML = `${el.start} to ${el.end} <i style="float: right;">${el.duration}</i>`;
-          grid.appendChild(val);
-        });
-      } else {
+    if (txt2 == 'langs') {
+      var info = mapLangPerc(res.repos);
+      info.forEach(el => {
         var grid = ele('div');
-        var label = ele('div');
-        var val = ele('div');
+        attr(grid, 'style', `display: grid; grid-template-columns: 25% 75%;`);
         cont.appendChild(grid);
+
+        var label = ele('div');
+        attr(label, 'style', `grid-area: 1 / 1; background: hsl(${Math.ceil(200+(el.percent)*1.3)}, 82%, 56%); color: #fff;${border2} padding: 6px; text-align: center;`);
+        label.innerHTML = `<b style="float: left;">${el.lang}</b> <i style="font-size: 0.65em; float: right;">${el.percent}%</i>`;
         grid.appendChild(label);
+
+        var val = ele('div');
+        attr(val, 'style', `grid-area: 1 / 2; border-bottom: 1px solid hsl(${Math.ceil(200+(el.percent)*1.3)}, 82%, 56%); padding: 6px;`);
+        val.innerHTML = `${el.start} to ${el.end} <i style="float: right;">${el.duration}</i>`;
         grid.appendChild(val);
-        attr(grid, 'style', `display: grid; grid-template-columns: 27% 65% 8%;`);
-        attr(label, 'style', `grid-area: 1 / 1; background: #004471; color: #fff;${border2} padding: 6px; text-align: center;`);
-        attr(val, 'style', `grid-area: 1 / 2;${border1} padding: 6px;`);
-        val.innerText = txt;
-        label.innerText = txt2;
+      });
+    } else {
+      var grid = ele('div');
+      var label = ele('div');
+      var val = ele('div');
+      cont.appendChild(grid);
+      grid.appendChild(label);
+      grid.appendChild(val);
+      attr(grid, 'style', `max-height: 33px; display: grid; grid-template-columns: 25% 67% 8%;`);
+      attr(label, 'style', `max-height: 33px; grid-area: 1 / 1; background: #004471; color: #fff;${border2} padding: 6px; text-align: center;`);
+      attr(val, 'style', `max-height: 33px; grid-area: 1 / 2;${border1} padding: 6px;`);
+      val.innerText = txt;
+      label.innerText = txt2;
 
-        if(itms[i][0] == 'email') {
-            var li = ele('div');
-            attr(li, 'style', `grid-area: 1 / 3; float: right; cursor: pointer; ${border1}`);
-            attr(li, 'data_action',itms[i][1]);
-			grid.appendChild(li);
-            li.innerHTML = svgs.li;
-            li.onclick = openByEmail;
-        }else{
-            attr(grid, 'style', `display: grid; grid-template-columns: 27% 73%;`);
-		}
-
+      if (itms[i][0] == 'email') {
+        var li = ele('div');
+        attr(li, 'style', `max-height: 33px; grid-area: 1 / 3; float: right; cursor: pointer; ${border1}`);
+        attr(li, 'data_action', itms[i][1]);
+        grid.appendChild(li);
+        li.innerHTML = svgs.li;
+        li.onclick = openByEmail;
+      } else {
+        attr(grid, 'style', `display: grid; grid-template-columns: 25% 75%;`);
       }
+
     }
+  }
 }
 getProfileData();
