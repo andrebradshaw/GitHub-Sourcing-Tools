@@ -95,7 +95,7 @@ function parseRepo(doc, type) {
 function getFollowCounts(elm, type) {
   var follower_a = Array.from(tn(elm, 'a')).filter(el => type.test(el.innerText))[0];
   var follower_s = follower_a ? cn(follower_a, 'Counter') : null;
-  var followerCount = follower_s[0] ? parseInt(follower_s[0].innerText.trim()) : 0;
+  var followerCount = follower_s && follower_s[0] ? parseInt(follower_s[0].innerText.trim()) : 0;
   return followerCount;
 }
 
