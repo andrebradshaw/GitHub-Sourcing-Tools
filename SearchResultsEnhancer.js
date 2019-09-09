@@ -165,7 +165,7 @@ function changePager() {
   var pagenation = cn(document, 'paginate-container codesearch-pagination-container')[0];
   if(pagenation){
   var pageor = ele('div');
-  attr(pageor, 'style', `position: fixed; top: 0px; left: 25%;`);
+  attr(pageor, 'style', `position: fixed; top: 0px; left: 35%;`);
   attr(pageor, 'class', 'self_pageor');
   pageor.innerHTML = pagenation.innerHTML.replace(/class="d-flex d-md-inline-block pagination"/g, 'class="self_paging" ').replace(/href/g, 'data_url');
   document.body.appendChild(pageor);
@@ -207,7 +207,7 @@ async function getProfileData() {
 
 function openByEmail() {
   console.log(this.getAttribute('data_action'));
-  window.open('https://www.linkedin.com/sales/gmail/profile/proxy/' + this.getAttribute('data_action'), 'PRINT', 'height=500, width=300,top=1,left=1');
+  window.open('https://www.linkedin.com/sales/gmail/profile/proxy/' + this.getAttribute('data_action')); //, 'PRINT', 'height=500, width=300,top=1,left=1
 }
 
 function createCard(elm, res) {
