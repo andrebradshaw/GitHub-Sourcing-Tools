@@ -18,6 +18,10 @@ var parseYearMonths = (n) => {
   return str;
 };
 
+var svgs = {
+	li: `<svg viewBox="0 0 80 80" version="1.1"><g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" sketch:type="MSPage"><g sketch:type="MSLayerGroup" /><g sketch:type="MSLayerGroup" stroke="#314E55" stroke-width="2" fill="#81A4E3"><g sketch:type="MSShapeGroup"><path d="M35.9955151,27.6266598 C35.9955151,23.8394326 33.0511715,20.8297982 29.7726613,20.8297982 C27.2676024,20.8297982 25.0529201,20.8297982 23.5815904,23.9999995 C23.3099556,24.5852775 22.9955155,26.2895184 22.9955155,27.1324171 L22.9955155,43.4999995 L15.036777,43.4999989 L15.0367767,22.7102582 L15.0367767,12.455873 L23.3012671,12.455873 L23.7089346,16.5 L23.8873426,16.5 C25.0805776,14.5783603 27.7924258,12.455873 32.6850041,12.455873 C38.6490801,12.455873 43.9955153,17.1766025 43.9955153,25.8297979 L43.9955153,43.4999995 L35.9955151,43.4999995 L35.9955151,27.6266598 Z M4.32081087,8.76648024 C1.71699591,8.76648024 0.036776724,6.92405932 0.036776724,4.64751022 C0.036776724,2.3156217 1.7713812,0.525677812 4.42767319,0.525677812 C7.08396519,0.525677812 8.71170734,2.31466757 8.76609263,4.64751022 C8.76704675,6.92405932 7.08491932,8.76648024 4.32081087,8.76648024 L4.32081087,8.76648024 Z M0.995515537,43.4999995 L0.995515303,12.4558734 L7.98371812,12.4558737 L7.98371835,43.4999999 L0.995515537,43.4999995 Z"/></g></g></g></svg>`
+};
+
 function mapLangPerc(arr) {
   var containArr = [];
   var obj = {};
@@ -172,6 +176,11 @@ async function getProfileData() {
   }}
 }
 
+function openByEmail() {
+console.log(this.getAttribute('data_action'));
+window.open('https://www.linkedin.com/sales/gmail/profile/proxy/'+this.getAttribute('data_action'),'PRINT', 'height=500, width=300,top=1,left=1');
+}
+
 function createCard(elm, res) {
     var cont = ele('div');
     attr(cont, 'class', 'additional_info_table');
@@ -205,18 +214,28 @@ function createCard(elm, res) {
         });
       } else {
         var grid = ele('div');
-        attr(grid, 'style', `display: grid; grid-template-columns: 25% 75%;`);
-        cont.appendChild(grid);
-
         var label = ele('div');
-        attr(label, 'style', `grid-area: 1 / 1; background: #004471; color: #fff;${border2} padding: 6px; text-align: center;`);
-        label.innerText = txt2;
-        grid.appendChild(label);
-
         var val = ele('div');
+        cont.appendChild(grid);
+        grid.appendChild(label);
+        grid.appendChild(val);
+        attr(grid, 'style', `display: grid; grid-template-columns: 25% 67% 8%;`);
+        attr(label, 'style', `grid-area: 1 / 1; background: #004471; color: #fff;${border2} padding: 6px; text-align: center;`);
         attr(val, 'style', `grid-area: 1 / 2;${border1} padding: 6px;`);
         val.innerText = txt;
-        grid.appendChild(val);
+        label.innerText = txt2;
+
+        if(itms[i][0] == 'email') {
+            var li = ele('div');
+            attr(li, 'style', `grid-area: 1 / 3; float: right; ${border1}`);
+            attr(li, 'data_action',itms[i][1]);
+			grid.appendChild(li);
+            li.innerHTML = svgs.li;
+            li.onclick = openByEmail;
+        }else{
+            attr(grid, 'style', `display: grid; grid-template-columns: 25% 75%;`);
+		}
+
       }
     }
 }
