@@ -138,7 +138,7 @@ function createSearchBox() {
     cont.appendChild(label);
 
     var input = ele('input');
-    attr(input, 'id', inputLabels[i].replace(/.+?(?=[A-Z])/, '').replace(/\s+/g,'').toLowerCase() + '__');
+    attr(input, 'id', inputLabels[i].replace(/^.*?(?=[A-Z])/, '').replace(/\s+/g,'').toLowerCase() + '__');
     attr(input, 'style', `width: 100%; border: 1px solid #004471; border-radius: 0.3em; padding: 3px;`);
     attr(input, 'placeholder', inputPlaceholders[i]);
     cont.appendChild(input);
@@ -177,7 +177,7 @@ function listenForLang(){
   var langs = langOpts.filter(el=> booleanSearch(this.value.trim(),el));  
   var parent = ele('div');
   var rect = this.getBoundingClientRect();
-  attr(parent,'style', `position: fixed; top: ${rect.bottom}px; left: ${rect.left}px; background: #fff; border: 1px solid #004471; border-bottom-left-radius: 0.2em; border-bottom-right-radius: 0.2em; padding: 9px;`);
+  attr(parent,'style', `position: fixed; top: ${rect.bottom}px; left: ${rect.left}px; background: #fff; border: 1px solid #004471; border-bottom-left-radius: 0.2em; border-bottom-right-radius: 0.2em; padding: 9px; z-index: 13212;`);
   attr(parent,'id', `langOptions_container`);
   document.body.appendChild(parent);
   createOptions(parent,langs);
@@ -187,7 +187,7 @@ function createOptions(parent,langs){
   for (var i = 0; i<langs.length; i++) {
     var opt = ele('div');
     attr(opt, 'data', langs[i]);
-    attr(opt, 'style', `width: 100%; border-bottom: 1px solid #004471; cursor: pointer; padding: 4px;`);
+    attr(opt, 'style', `width: 100%; border-bottom: 1px solid #004471; cursor: pointer; padding: 4px; z-index: 13212;`);
     parent.appendChild(opt);
     opt.innerText = langs[i];
     opt.onmouseenter = mousein;
@@ -224,7 +224,7 @@ function runSearch(){
   var rp = gi(document,'repos__');
   var lg = gi(document,'language__');  
  
-  var name = nm && nm.value ? `fullname%3A${nm.value.replace(/\s*/,'+')}` : '';
+  var name = nm && nm.value ? `fullname%3A${nm.value.trim()}` : '';
   var geo = lc && lc.value && lc.value.split(/,\s+|\s+/).length > 1 ? lc.value.split(/,\s+|\s+/).reduce((a,b)=> a+`+location%3A`+b) : lc && lc.value ? 'location%3A'+lc.value : '';
   var folw = fl && fl.value ? `+followers%3${fl.value}` : '';
   var repo = rp && rp.value ? `+repos%3A${rp.value}` : '';
