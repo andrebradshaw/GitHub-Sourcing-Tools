@@ -73,6 +73,31 @@ function dragElement() {
   }
 }
 
+var svgs = {
+	close: `<svg x="0px" y="0px" viewBox="0 0 100 100"><g style="transform: scale(0.85, 0.85)" stroke-width="1" fill="none" fill-rule="evenodd" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(2, 2)" stroke="#e21212" stroke-width="8"><path d="M47.806834,19.6743435 L47.806834,77.2743435" transform="translate(49, 50) rotate(225) translate(-49, -50) "/><path d="M76.6237986,48.48 L19.0237986,48.48" transform="translate(49, 50) rotate(225) translate(-49, -50) "/></g></g></svg>`,
+};
+
+function closeView() {
+  this.parentElement.parentElement.outerHTML = '';
+}
+
+function aninCloseBtn() {
+  var l1 = tn(this, 'path')[0];
+  var l2 = tn(this, 'path')[1];
+  l1.style.transform = "translate(49px, 50px) rotate(45deg) translate(-49px, -50px)";
+  l1.style.transition = "all 333ms";
+  l2.style.transform = "translate(49px, 50px) rotate(135deg) translate(-49px, -50px)";
+  l2.style.transition = "all 333ms";
+}
+
+function anoutCloseBtn() {
+  var l1 = tn(this, 'path')[0];
+  var l2 = tn(this, 'path')[1];
+  l1.style.transform = "translate(49px, 50px) rotate(225deg) translate(-49px, -50px)";
+  l1.style.transition = "all 333ms";
+  l2.style.transform = "translate(49px, 50px) rotate(225deg) translate(-49px, -50px)";
+  l2.style.transition = "all 333ms";
+}
 
 function createSearchBox() {
   if(gi(document,'githubber_search')) gi(document,'githubber_search').outerHTML = '';
@@ -90,6 +115,14 @@ function createSearchBox() {
   attr(head,'style',`background: #24292e; width: 100%; height: 40px; border: 1.6px solid #1c1c1c; border-top-right-radius: 0.3em; border-top-left-radius: 0.3em; cursor: move;`);
   main.appendChild(head);
   head.onmouseover = dragElement;
+
+    var cls = ele('div');
+    head.appendChild(cls);
+    attr(cls, 'style', 'grid-area: 1 / 3; width: 27px; height: 27px; cursor: pointer; transform: scale(1.2, 1.2);');
+    cls.innerHTML = svgs.close;
+    cls.onmouseenter = aninCloseBtn;
+    cls.onmouseleave = anoutCloseBtn;
+    cls.onclick = closeView;
 
   var box = ele('div');
   attr(box, 'style', `border: 1.6px solid #004471;  border-bottom-left-radius: 0.3em; border-bottom-right-radius: 0.3em; padding: 16px; background: #fff;`);
@@ -199,12 +232,12 @@ function runSearch(){
   
 
   var name = nm && nm.value ? `fullname%3A${nm.value.replace(/\s*/,'+')}` : '';
-  var geo = lc && lc.value ? lc.value.split(/,\s+|\s+/).reduce((a,b)=> a+`+location%3A`+b) : '';
+  var geo = lc && lc.value && lc.value.split(/,\s+|\s+/).length > 1 ? lc.value.split(/,\s+|\s+/).reduce((a,b)=> a+`+location%3A`+b) : lc && lc.value ? 'location%3A'+lc.value : ''
   var folw = fl && fl.value ? `+followers%3${fl.value}` : '';
   var repo = rp && rp.value ? `+repos%3A${rp.value}` : '';
   var lang = lg && lg.value ? `+language%3A${lg.value}` : ''
 
-  var out = `https://github.com/search?q=`+name+geo+repo+lang+`&type=Users`;
+  var out = `https://github.com/search?q=`+name+geo+repo+lang+`&type=Users&ref=advsearch`;
 console.log(out);
 window.open(out);
 }
