@@ -228,7 +228,7 @@ function runSearch(){
   var lg = gi(document,'language__');  
   var name = nm && nm.value ? `fullname%3A${nm.value.trim()}` : '';
   var geo = lc && lc.value && lc.value.split(/,\s*/).length > 1 
-? lc.value.split(/,\s*/).reduce((a,b)=> a+`+location%3A`+b) : lc && lc.value && /\b\s+\bOR\b\s+\b/.test(lc.value) 
+? ('+location%3A')+(lc.value.split(/,\s*/).reduce((a,b)=> a+`+location%3A`+b)) : lc && lc.value && /\b\s+\bOR\b\s+\b/.test(lc.value) 
 ? (('+location%3A')+(lc.value.split(/\b\s+\bOR\b\s+\b/).reduce((a,b)=> a+`+location%3A`+b))).replace(/(?<=%3A)(?=[\w\s]+)/, '"').replace(/(?<=%3A"[\w\s]+)(?=\+)/, '"') : lc && lc.value && /\b\s+\b/.test(lc.value) 
 ? 'location%3A%22'+lc.value+'%22' : lc && lc.value 
 ? 'location%3A'+lc.value : '';
