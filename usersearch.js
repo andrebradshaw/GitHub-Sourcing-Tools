@@ -9,6 +9,34 @@ var ele = (t) => document.createElement(t);
 var attr = (o, k, v) => o.setAttribute(k, v);
 var reChar = (s) => s.match(/&#.+?;/g) && s.match(/&#.+?;/g).length > 0 ? s.match(/&#.+?;/g).map(el => [el, String.fromCharCode(/d+/.exec(el)[0])]).map(m => s = s.replace(new RegExp(m[0], 'i'), m[1])).pop() : s;
 
+function parseAsRegexArr(bool) {
+  if (typeof bool == 'object') {
+    /* if object, and ensure it is returned as an array */
+    return Array.isArray(bool) ? bool : [bool];
+  } else {
+    var rxReady = (s) => s ? s.replace(/"/g, '\\b').trim().replace(/\)/g, '').replace(/\(/g, '').replace(/\s+/g, '.{0,2}').replace(/\//g, '\\/').replace(/\+/g, '\\+').replace(/\s*\*\s*/g, '\\s*\\w*\\s+') : s;
+    var checkSimpleOR = (s)=> /\bor\b/i.test(s) && /\(/.test(s) === false && /\b\s+and\s\b/.test(s) === false;
+    var checkAndOrSimple = (s) => [/\bor\b/i,/\band\b/i].every(el=> el.test(s) && /\(/.test(s) === false);
+
+    if(checkAndOrSimple(bool)){
+      return bool.replace(/\s+OR\s+|\s*\|\s*/gi, '|').replace(/\//g, '\\/').replace(/"/g, '\\b').replace(/\s+/g, '.{0,2}').replace(/\s*\*\s*/g, '\\s*\\w*\\s+').split(/\band\b/).map(el=> new RegExp(el.trim(), 'i'));
+
+    } else if (checkSimpleOR(bool)) {
+      return [new RegExp(bool.replace(/\s+OR\s+|\s*\|\s*/gi, '|').replace(/\//g, '\\/').replace(/"/g, '\\b').replace(/\s+/g, '.{0,2}').replace(/\s*\*\s*/g, '\\s*\\w*\\s+'), 'i')];
+
+    } else {
+      var orx = "\\(.+?\\)|(\\(\\w+\\s{0,1}OR\\s|\\w+\\s{0,1}OR\\s)+((\\w+\s)+?|(\\w+)\\)+)+?";
+      var orMatch = bool ? bool.match(new RegExp(orx, 'g')) : [];
+      var orArr = orMatch ? orMatch.map(b=> rxReady(b.replace(/\s+OR\s+|\s*\|\s*/gi, '|')) ) : [];
+      var noOrs = bool ? bool.replace(new RegExp(orx, 'g'), '').split(/\s+[AND\s+]+/i) : bool;
+      var ands = noOrs ? noOrs.map(a=> rxReady(a)) : [];
+      var xArr = ands.concat(orArr).filter(i=> i != '').map(x=> new RegExp(x, 'i') );
+      return xArr;
+    }
+  }
+}
+var booleanSearch = (bool, target) => parseAsRegexArr(bool).every(x=> x.test(target));
+
 var langOpts = ["ActionScript", "C", "C#", "C++", "Clojure", "CoffeeScript", "CSS", "Go", "Haskell", "HTML", "Java", "JavaScript", "Lua", "MATLAB", "Objective-C", "Perl", "PHP", "Python", "R", "Ruby", "Scala", "Shell", "Swift", "TeX", "Vim script", "1C Enterprise", "ABAP", "ABNF", "Ada", "Adobe Font Metrics", "Agda", "AGS Script", "Alloy", "Alpine Abuild", "Altium Designer", "AMPL", "AngelScript", "Ant Build System", "ANTLR", "ApacheConf", "Apex", "API Blueprint", "APL", "Apollo Guidance Computer", "AppleScript", "Arc", "AsciiDoc", "ASN.1", "ASP", "AspectJ", "Assembly", "Asymptote", "ATS", "Augeas", "AutoHotkey", "AutoIt", "Awk", "Ballerina", "Batchfile", "Befunge", "BibTeX", "Bison", "BitBake", "Blade", "BlitzBasic", "BlitzMax", "Bluespec", "Boo", "Brainfuck", "Brightscript", "C-ObjDump", "C2hs Haskell", "Cabal Config", "Cap'n Proto", "CartoCSS", "Ceylon", "Chapel", "Charity", "ChucK", "Cirru", "Clarion", "Clean", "Click", "CLIPS", "Closure Templates", "Cloud Firestore Security Rules", "CMake", "COBOL", "ColdFusion", "ColdFusion CFC", "COLLADA", "Common Lisp", "Common Workflow Language", "Component Pascal", "CoNLL-U", "Cool", "Coq", "Cpp-ObjDump", "Creole", "Crystal", "CSON", "Csound", "Csound Document", "Csound Score", "CSV", "Cuda", "CWeb", "Cycript", "Cython", "D", "D-ObjDump", "Darcs Patch", "Dart", "DataWeave", "desktop", "Dhall", "Diff", "DIGITAL Command Language", "DM", "DNS Zone", "Dockerfile", "Dogescript", "DTrace", "Dylan", "E", "Eagle", "Easybuild", "EBNF", "eC", "Ecere Projects", "ECL", "ECLiPSe", "EditorConfig", "Edje Data Collection", "edn", "Eiffel", "EJS", "Elixir", "Elm", "Emacs Lisp", "EmberScript", "EML", "EQ", "Erlang", "F#", "F*", "Factor", "Fancy", "Fantom", "FIGlet Font", "Filebench WML", "Filterscript", "fish", "FLUX", "Formatted", "Forth", "Fortran", "FreeMarker", "Frege", "G-code", "Game Maker Language", "GAML", "GAMS", "GAP", "GCC Machine Description", "GDB", "GDScript", "Genie", "Genshi", "Gentoo Ebuild", "Gentoo Eclass", "Gerber Image", "Gettext Catalog", "Gherkin", "Git Attributes", "Git Config", "GLSL", "Glyph", "Glyph Bitmap Distribution Format", "GN", "Gnuplot", "Golo", "Gosu", "Grace", "Gradle", "Grammatical Framework", "Graph Modeling Language", "GraphQL", "Graphviz (DOT)", "Groovy", "Groovy Server Pages", "Hack", "Haml", "Handlebars", "HAProxy", "Harbour", "Haxe", "HCL", "HiveQL", "HLSL", "HolyC", "HTML+Django", "HTML+ECR", "HTML+EEX", "HTML+ERB", "HTML+PHP", "HTML+Razor", "HTTP", "HXML", "Hy", "HyPhy", "IDL", "Idris", "Ignore List", "IGOR Pro", "Inform 7", "INI", "Inno Setup", "Io", "Ioke", "IRC log", "Isabelle", "Isabelle ROOT", "J", "Jasmin", "Java Properties", "Java Server Pages", "JavaScript+ERB", "JFlex", "Jison", "Jison Lex", "Jolie", "JSON", "JSON with Comments", "JSON5", "JSONiq", "JSONLD", "Jsonnet", "JSX", "Julia", "Jupyter Notebook", "KiCad Layout", "KiCad Legacy Layout", "KiCad Schematic", "Kit", "Kotlin", "KRL", "LabVIEW", "Lasso", "Latte", "Lean", "Less", "Lex", "LFE", "LilyPond", "Limbo", "Linker Script", "Linux Kernel Module", "Liquid", "Literate Agda", "Literate CoffeeScript", "Literate Haskell", "LiveScript", "LLVM", "Logos", "Logtalk", "LOLCODE", "LookML", "LoomScript", "LSL", "LTspice Symbol", "M", "M4", "M4Sugar", "Makefile", "Mako", "Markdown", "Marko", "Mask", "Mathematica", "Maven POM", "Max", "MAXScript", "mcfunction", "MediaWiki", "Mercury", "Meson", "Metal", "MiniD", "Mirah", "MLIR", "Modelica", "Modula-2", "Modula-3", "Module Management System", "Monkey", "Moocode", "MoonScript", "Motorola 68K Assembly", "MQL4", "MQL5", "MTML", "MUF", "mupad", "Myghty", "nanorc", "NCL", "Nearley", "Nemerle", "nesC", "NetLinx", "NetLinx+ERB", "NetLogo", "NewLisp", "Nextflow", "Nginx", "Nim", "Ninja", "Nit", "Nix", "NL", "NSIS", "Nu", "NumPy", "ObjDump", "Objective-C++", "Objective-J", "ObjectScript", "OCaml", "Omgrofl", "ooc", "Opa", "Opal", "OpenCL", "OpenEdge ABL", "OpenRC runscript", "OpenSCAD", "OpenStep Property List", "OpenType Feature File", "Org", "Ox", "Oxygene", "Oz", "P4", "Pan", "Papyrus", "Parrot", "Parrot Assembly", "Parrot Internal Representation", "Pascal", "Pawn", "Pep8", "Perl 6", "Pic", "Pickle", "PicoLisp", "PigLatin", "Pike", "PLpgSQL", "PLSQL", "Pod", "Pod 6", "PogoScript", "Pony", "PostCSS", "PostScript", "POV-Ray SDL", "PowerBuilder", "PowerShell", "Processing", "Prolog", "Propeller Spin", "Protocol Buffer", "Public Key", "Pug", "Puppet", "Pure Data", "PureBasic", "PureScript", "Python console", "Python traceback", "q", "QMake", "QML", "Quake", "Racket", "Ragel", "RAML", "Rascal", "Raw token data", "RDoc", "REALbasic", "Reason", "Rebol", "Red", "Redcode", "Regular Expression", "Ren'Py", "RenderScript", "reStructuredText", "REXX", "RHTML", "Rich Text Format", "Ring", "RMarkdown", "RobotFramework", "Roff", "Roff Manpage", "Rouge", "RPC", "RPM Spec", "RUNOFF", "Rust", "Sage", "SaltStack", "SAS", "Sass", "Scaml", "Scheme", "Scilab", "SCSS", "sed", "Self", "ShaderLab", "ShellSession", "Shen", "Slash", "Slice", "Slim", "Smali", "Smalltalk", "Smarty", "SmPL", "SMT", "Solidity", "SourcePawn", "SPARQL", "Spline Font Database", "SQF", "SQL", "SQLPL", "Squirrel", "SRecode Template", "SSH Config", "Stan", "Standard ML", "Stata", "STON", "Stylus", "SubRip Text", "SugarSS", "SuperCollider", "Svelte", "SVG", "SystemVerilog", "Tcl", "Tcsh", "Tea", "Terra", "Texinfo", "Text", "Textile", "Thrift", "TI Program", "TLA", "TOML", "TSQL", "TSX", "Turing", "Turtle", "Twig", "TXL", "Type Language", "TypeScript", "Unified Parallel C", "Unity3D Asset", "Unix Assembly", "Uno", "UnrealScript", "UrWeb", "V", "Vala", "VCL", "Verilog", "VHDL", "Visual Basic", "Volt", "Vue", "Wavefront Material", "Wavefront Object", "wdl", "Web Ontology Language", "WebAssembly", "WebIDL", "WebVTT", "Windows Registry Entries", "wisp", "Wollok", "World of Warcraft Addon Data", "X BitMap", "X Font Directory Index", "X PixMap", "X10", "xBase", "XC", "XCompose", "XML", "XML Property List", "Xojo", "XPages", "XProc", "XQuery", "XS", "XSLT", "Xtend", "Yacc", "YAML", "YANG", "YARA", "YASnippet", "ZAP", "Zeek", "ZenScript", "Zephir", "Zig", "ZIL", "Zimpl"];
 
 function dragElement() {
@@ -49,7 +77,7 @@ function dragElement() {
 function createSearchBox() {
   if(gi(document,'githubber_search')) gi(document,'githubber_search').outerHTML = '';
 
-  var inputLabels = ['Name', 'Location', '# Followers', '# of Repos'];
+  var inputLabels = ['Full Name', 'Location', '# Followers', '# of Repos'];
   var inputPlaceholders = ['Evan You', 'California', '>20', '10..100'];
 
   
@@ -79,6 +107,7 @@ function createSearchBox() {
     cont.appendChild(label);
 
     var input = ele('input');
+    attr(input, 'id', inputLabels[i].replace(/.+?(?=[A-Z])/, '').replace(/\s+/g,'').toLowerCase() + '__');
     attr(input, 'style', `width: 100%; border: 1px solid #004471; border-radius: 0.3em; padding: 3px;`);
     attr(input, 'placeholder', inputPlaceholders[i]);
     cont.appendChild(input);
@@ -93,10 +122,12 @@ function createSearchBox() {
   selc.appendChild(lab);
 
   var langSearch = ele('input');
+  attr(langSearch,'id','language__');
   attr(langSearch, 'placeholder', 'JavaScript'); 
   attr(langSearch, 'style', `width: 100%; border: 1px solid #004471; border-radius: 0.3em; padding: 3px;`);
   selc.appendChild(langSearch);  
-  
+  langSearch.onkeyup = listenForLang;
+
   var empt = ele('div');
   attr(empt, 'style', `width: 100%; height: 20px; border: 1px solid #fff; border-radius: 0.3em; padding: 3px;`);
   box.appendChild(empt);
@@ -106,15 +137,75 @@ function createSearchBox() {
   attr(search,'id','githubber_search_btn');
   box.appendChild(search);
   search.innerText = 'Search';
+  search.onmouseup = runSearch;
+}
+
+
+function listenForLang(){
+  if(gi(document,'langOptions_container')) gi(document,'langOptions_container').outerHTML = '';
+  var langs = langOpts.filter(el=> booleanSearch(this.value.trim(),el));  
+  var parent = ele('div');
+  var rect = this.getBoundingClientRect();
+  attr(parent,'style', `position: fixed; top: ${rect.bottom}px; left: ${rect.left}px; background: #fff; border: 1px solid #004471; border-bottom-left-radius: 0.2em; border-bottom-right-radius: 0.2em; padding: 9px;`); //${this.clientY} ${this.clientX}
+  attr(parent,'id', `langOptions_container`);
+  document.body.appendChild(parent);
+  createOptions(parent,langs);
 }
 
 function createOptions(parent,langs){
   for (var i = 0; i<langs.length; i++) {
     var opt = ele('div');
     attr(opt, 'data', langs[i]);
-    attr(opt, 'style', `width: 100%; border-bottom: 1px solid #004471; cursor: pointer;`);
+    attr(opt, 'style', `width: 100%; border-bottom: 1px solid #004471; cursor: pointer; padding: 4px;`);
     parent.appendChild(opt);
     opt.innerText = langs[i];
+    opt.onmouseenter = mousein;
+    opt.onmouseleave = mouseout;
+    opt.onmousedown = mousedown;
+    opt.onmouseup = mouseup;
   }
+}
+
+function mousein(){
+  this.style.background = '#cbf2e3';
+  this.style.transition = 'all 200ms';
+}
+function mouseout(){
+  this.style.background = '#fff';
+  this.style.transition = 'all 200ms';
+}
+function mousedown(){
+  this.style.background = '#b1f0d8';
+  this.style.transition = 'all 200ms';
+}
+function mouseup(){
+  gi(document,'language__').value = this.innerText.trim();
+  
+  this.style.background = '#cbf2e3';
+  this.style.transition = 'all 200ms';  
+  this.parentElement.outerHTML = '';
+//   this.ontransitionend = ()=> {this.style.transform = 'translate(0px, -20px)'};
+  
+}
+
+// var searchCont = `https://github.com/search?q=fullname%3AJason+location%3AAtlanta+location%3AGA+followers%3A10..100+repos%3A%3E20+language%3AJava&type=Users`
+
+function runSearch(){
+  var nm = gi(document,'fullname__');
+  var lc = gi(document,'location__');
+  var fl = gi(document,'followers__');
+  var rp = gi(document,'repos__');
+  var lg = gi(document,'language__');  
+  
+
+  var name = nm && nm.value ? `fullname%3A${nm.value.replace(/\s*/,'+')}` : '';
+  var geo = lc && lc.value ? lc.value.split(/,\s+|\s+/).reduce((a,b)=> a+`+location%3A`+b) : '';
+  var folw = fl && fl.value ? `+followers%3${fl.value}` : '';
+  var repo = rp && rp.value ? `+repos%3A${rp.value}` : '';
+  var lang = lg && lg.value ? `+language%3A${lg.value}` : ''
+
+  var out = `https://github.com/search?q=`+name+geo+repo+lang+`&type=Users`;
+console.log(out);
+window.open(out);
 }
 createSearchBox()
