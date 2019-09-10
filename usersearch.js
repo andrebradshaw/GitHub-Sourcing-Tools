@@ -11,7 +11,6 @@ var reChar = (s) => s.match(/&#.+?;/g) && s.match(/&#.+?;/g).length > 0 ? s.matc
 
 function parseAsRegexArr(bool) {
   if (typeof bool == 'object') {
-    /* if object, and ensure it is returned as an array */
     return Array.isArray(bool) ? bool : [bool];
   } else {
     var rxReady = (s) => s ? s.replace(/"/g, '\\b').trim().replace(/\)/g, '').replace(/\(/g, '').replace(/\s+/g, '.{0,2}').replace(/\//g, '\\/').replace(/\+/g, '\\+').replace(/\s*\*\s*/g, '\\s*\\w*\\s+') : s;
@@ -105,9 +104,8 @@ function createSearchBox() {
   var inputLabels = ['Full Name', 'Location', '# Followers', '# of Repos'];
   var inputPlaceholders = ['Evan You', 'California', '>20', '10..100'];
 
-  
   var main = ele('div');
-  attr(main, 'style', `position: fixed; top: 5%; left: 5%; width: 33%;`);
+  attr(main, 'style', `position: fixed; top: 5%; left: 5%; width: 33%; z-index: 12212`);
   attr(main, 'id', 'githubber_search');
   document.body.appendChild(main);
 
@@ -118,7 +116,7 @@ function createSearchBox() {
 
     var cls = ele('div');
     head.appendChild(cls);
-    attr(cls, 'style', 'grid-area: 1 / 3; width: 27px; height: 27px; cursor: pointer; transform: scale(1.2, 1.2);');
+    attr(cls, 'style', 'grid-area: 1 / 3; width: 30px; height: 30px; cursor: pointer; transform: scale(1.2, 1.2);');
     cls.innerHTML = svgs.close;
     cls.onmouseenter = aninCloseBtn;
     cls.onmouseleave = anoutCloseBtn;
@@ -179,7 +177,7 @@ function listenForLang(){
   var langs = langOpts.filter(el=> booleanSearch(this.value.trim(),el));  
   var parent = ele('div');
   var rect = this.getBoundingClientRect();
-  attr(parent,'style', `position: fixed; top: ${rect.bottom}px; left: ${rect.left}px; background: #fff; border: 1px solid #004471; border-bottom-left-radius: 0.2em; border-bottom-right-radius: 0.2em; padding: 9px;`); //${this.clientY} ${this.clientX}
+  attr(parent,'style', `position: fixed; top: ${rect.bottom}px; left: ${rect.left}px; background: #fff; border: 1px solid #004471; border-bottom-left-radius: 0.2em; border-bottom-right-radius: 0.2em; padding: 9px;`);
   attr(parent,'id', `langOptions_container`);
   document.body.appendChild(parent);
   createOptions(parent,langs);
@@ -213,15 +211,11 @@ function mousedown(){
 }
 function mouseup(){
   gi(document,'language__').value = this.innerText.trim();
-  
   this.style.background = '#cbf2e3';
   this.style.transition = 'all 200ms';  
-  this.parentElement.outerHTML = '';
-//   this.ontransitionend = ()=> {this.style.transform = 'translate(0px, -20px)'};
-  
+  this.parentElement.outerHTML = '';  
 }
 
-// var searchCont = `https://github.com/search?q=fullname%3AJason+location%3AAtlanta+location%3AGA+followers%3A10..100+repos%3A%3E20+language%3AJava&type=Users`
 
 function runSearch(){
   var nm = gi(document,'fullname__');
@@ -229,16 +223,14 @@ function runSearch(){
   var fl = gi(document,'followers__');
   var rp = gi(document,'repos__');
   var lg = gi(document,'language__');  
-  
-
+ 
   var name = nm && nm.value ? `fullname%3A${nm.value.replace(/\s*/,'+')}` : '';
-  var geo = lc && lc.value && lc.value.split(/,\s+|\s+/).length > 1 ? lc.value.split(/,\s+|\s+/).reduce((a,b)=> a+`+location%3A`+b) : lc && lc.value ? 'location%3A'+lc.value : ''
+  var geo = lc && lc.value && lc.value.split(/,\s+|\s+/).length > 1 ? lc.value.split(/,\s+|\s+/).reduce((a,b)=> a+`+location%3A`+b) : lc && lc.value ? 'location%3A'+lc.value : '';
   var folw = fl && fl.value ? `+followers%3${fl.value}` : '';
   var repo = rp && rp.value ? `+repos%3A${rp.value}` : '';
-  var lang = lg && lg.value ? `+language%3A${lg.value}` : ''
-
+  var lang = lg && lg.value ? `+language%3A${lg.value}` : '';
   var out = `https://github.com/search?q=`+name+geo+repo+lang+`&type=Users&ref=advsearch`;
-console.log(out);
-window.open(out);
+
+  window.open(out);
 }
 createSearchBox()
