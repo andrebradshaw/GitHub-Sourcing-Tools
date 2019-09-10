@@ -142,6 +142,7 @@ function createSearchBox() {
     attr(input, 'style', `width: 100%; border: 1px solid #004471; border-radius: 0.3em; padding: 3px;`);
     attr(input, 'placeholder', inputPlaceholders[i]);
     cont.appendChild(input);
+    input.onkeyup = keyup;
   }
 
   var selc = ele('div');
@@ -215,7 +216,9 @@ function mouseup(){
   this.style.transition = 'all 200ms';  
   this.parentElement.outerHTML = '';  
 }
-
+function keyup(e){
+  if(e.key == "Enter") {runSearch()}
+}
 
 function runSearch(){
   var nm = gi(document,'fullname__');
@@ -225,7 +228,7 @@ function runSearch(){
   var lg = gi(document,'language__');  
  
   var name = nm && nm.value ? `fullname%3A${nm.value.trim()}` : '';
-  var geo = lc && lc.value && lc.value.split(/,\s+|\s+/).length > 1 ? lc.value.split(/,\s+|\s+/).reduce((a,b)=> a+`+location%3A`+b) : lc && lc.value ? 'location%3A'+lc.value : '';
+  var geo = lc && lc.value && lc.value.split(/,\s*/).length > 1 ? lc.value.split(/,\s*/).reduce((a,b)=> a+`+location%3A`+b) : lc && lc.value && /\b\s+\b/.test(lc.value) ? 'location%3A%22'+lc.value+'%22' : lc && lc.value ? 'location%3A'+lc.value : '';
   var folw = fl && fl.value ? `+followers%3${fl.value}` : '';
   var repo = rp && rp.value ? `+repos%3A${rp.value}` : '';
   var lang = lg && lg.value ? `+language%3A${lg.value}` : '';
