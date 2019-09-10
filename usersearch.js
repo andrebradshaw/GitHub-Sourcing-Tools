@@ -68,7 +68,6 @@ function createSearchBox() {
   attr(box, 'id', 'githubber_search');
   main.appendChild(box);
 
-
   for (var i = 0; i < inputLabels.length; i++) {
     var cont = ele('div');
     attr(cont, 'style', 'width: 100%;');
@@ -93,18 +92,11 @@ function createSearchBox() {
   lab.innerText = 'Language';
   selc.appendChild(lab);
 
-  var selector = ele('select');
-  attr(selector, 'style', `width: 100%; border: 1px solid #004471; border-radius: 0.3em; padding: 3px;`);
-  selc.appendChild(selector);
-
-  for (var i = 0; i<langOpts.length; i++) {
-    var opt = ele('option');
-    attr(opt, 'value', langOpts[i]);
-    attr(opt, 'style', `width: 100%; border-bottom: 1px solid #004471; cursor: pointer;`);
-    selector.appendChild(opt);
-    opt.innerText = langOpts[i];
-  }
-
+  var langSearch = ele('input');
+  attr(langSearch, 'placeholder', 'JavaScript'); 
+  attr(langSearch, 'style', `width: 100%; border: 1px solid #004471; border-radius: 0.3em; padding: 3px;`);
+  selc.appendChild(langSearch);  
+  
   var empt = ele('div');
   attr(empt, 'style', `width: 100%; height: 20px; border: 1px solid #fff; border-radius: 0.3em; padding: 3px;`);
   box.appendChild(empt);
@@ -116,4 +108,13 @@ function createSearchBox() {
   search.innerText = 'Search';
 }
 
+function createOptions(parent,langs){
+  for (var i = 0; i<langs.length; i++) {
+    var opt = ele('div');
+    attr(opt, 'data', langs[i]);
+    attr(opt, 'style', `width: 100%; border-bottom: 1px solid #004471; cursor: pointer;`);
+    parent.appendChild(opt);
+    opt.innerText = langs[i];
+  }
+}
 createSearchBox()
