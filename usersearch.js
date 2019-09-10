@@ -142,7 +142,7 @@ function createSearchBox() {
     attr(input, 'style', `width: 100%; border: 1px solid #004471; border-radius: 0.3em; padding: 3px;`);
     attr(input, 'placeholder', inputPlaceholders[i]);
     cont.appendChild(input);
-    input.onkeyup = keyup;
+    input.onkeyup = keyupRun;
   }
 
   var selc = ele('div');
@@ -157,8 +157,10 @@ function createSearchBox() {
   attr(langSearch,'id','language__');
   attr(langSearch, 'placeholder', 'JavaScript'); 
   attr(langSearch, 'style', `width: 100%; border: 1px solid #004471; border-radius: 0.3em; padding: 3px;`);
-  selc.appendChild(langSearch);  
+  selc.appendChild(langSearch);
+  langSearch.onkeydown = listenForArrow;
   langSearch.onkeyup = listenForLang;
+
 
   var empt = ele('div');
   attr(empt, 'style', `width: 100%; height: 20px; border: 1px solid #fff; border-radius: 0.3em; padding: 3px;`);
@@ -173,7 +175,14 @@ function createSearchBox() {
 }
 
 
-function listenForLang(){
+function listenForArrow(e){
+  if(e.key == "ArrowDown"){
+   gi(document,'language__').value = cn(document,'lang_opts')[0].innerText;
+  if(gi(document,'langOptions_container')) gi(document,'langOptions_container').outerHTML = '';
+  }
+}
+
+function listenForLang(e){
   if(gi(document,'langOptions_container')) gi(document,'langOptions_container').outerHTML = '';
   var langs = langOpts.filter(el=> booleanSearch(this.value.trim(),el));  
   var parent = ele('div');
@@ -182,11 +191,16 @@ function listenForLang(){
   attr(parent,'id', `langOptions_container`);
   document.body.appendChild(parent);
   createOptions(parent,langs);
+  if(e.key == 'Enter') {
+    runSearch();
+    if(gi(document,'langOptions_container')) gi(document,'langOptions_container').outerHTML = '';
+  }
 }
 
 function createOptions(parent,langs){
   for (var i = 0; i<langs.length; i++) {
     var opt = ele('div');
+    attr(opt, 'class', 'lang_opts');
     attr(opt, 'data', langs[i]);
     attr(opt, 'style', `width: 100%; border-bottom: 1px solid #004471; cursor: pointer; padding: 4px; z-index: 13212;`);
     parent.appendChild(opt);
@@ -216,7 +230,7 @@ function mouseup(){
   this.style.transition = 'all 200ms';  
   this.parentElement.outerHTML = '';  
 }
-function keyup(e){
+function keyupRun(e){
   if(e.key == "Enter") {runSearch()}
 }
 
