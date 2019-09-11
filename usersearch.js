@@ -78,6 +78,7 @@ var svgs = {
 
 function closeView() {
   this.parentElement.parentElement.outerHTML = '';
+  if(gi(document,'langOptions_container')) gi(document,'langOptions_container').outerHTML = '';
 }
 
 function aninCloseBtn() {
@@ -256,7 +257,7 @@ function runSearch(){
   var repo = rp && rp.value ? `+repos%3A${rp.value}` : '';
   var lang = lg && lg.value ? `+language%3A${lg.value}` : '';
   var out = `https://github.com/search?q=`+name+geo+repo+lang+`&type=Users&ref=advsearch`;
-
+  if(gi(document,'langOptions_container')) gi(document,'langOptions_container').outerHTML = '';
   window.open(out);
 }
 createSearchBox()
