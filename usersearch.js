@@ -172,6 +172,10 @@ function createSearchBox() {
   box.appendChild(search);
   search.innerText = 'Search';
   search.onmouseup = runSearch;
+  search.onmouseenter = sBtnIn;
+  search.onmouseleave = sBtnOut;
+  function sBtnIn(){this.style.background = '#defff2';};
+  function sBtnOut(){this.style.background = '#fff';};
 }
 
 
@@ -195,6 +199,7 @@ function listenForLang(e){
     runSearch();
     if(gi(document,'langOptions_container')) gi(document,'langOptions_container').outerHTML = '';
   }
+  if(this.value.trim().length<1) gi(document,'langOptions_container').outerHTML = '';
 }
 
 function createOptions(parent,langs){
