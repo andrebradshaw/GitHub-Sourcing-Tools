@@ -46,7 +46,7 @@ function downloadr(arr2D, filename) {
 async function getPatches(link) {
   var res = await fetch(link);
   var html = await res.text();
-  var email = reg(/(?<=From:.+?)[\w\.+]+@[\w-]+\.[a-zA-Z]+/.exec(html.replace(/\w+@users.noreply.github.com|\+.+?(?=@)/g, '')),0);
+  var email = reg(/(?<=From:.+?)\b[\w\.\-\+]+@[\w\-]+\.[a-zA-Z]{2,13}(\.[a-zA-Z]{2,13}|\b)/.exec(html.replace(/\w+@users.noreply.github.com|\+.+?(?=@)/g, '')),0);
   var check = /users.noreply.github.com/i.test(email) ? '' : email;
   return check;
 }
