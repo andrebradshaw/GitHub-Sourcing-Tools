@@ -87,7 +87,7 @@ function aninCloseBtn() {
   l1.style.transform = "translate(49px, 50px) rotate(45deg) translate(-49px, -50px)";
   l1.style.transition = "all 333ms";
   l2.style.transform = "translate(49px, 50px) rotate(135deg) translate(-49px, -50px)";
-  l2.style.transition = "all 333ms";
+  l2.style.transition = "all 133ms";
 }
 
 function anoutCloseBtn() {
@@ -96,7 +96,7 @@ function anoutCloseBtn() {
   l1.style.transform = "translate(49px, 50px) rotate(225deg) translate(-49px, -50px)";
   l1.style.transition = "all 333ms";
   l2.style.transform = "translate(49px, 50px) rotate(225deg) translate(-49px, -50px)";
-  l2.style.transition = "all 333ms";
+  l2.style.transition = "all 133ms";
 }
 
 function createSearchBox() {
@@ -117,7 +117,7 @@ function createSearchBox() {
 
     var cls = ele('div');
     head.appendChild(cls);
-    attr(cls, 'style', 'grid-area: 1 / 3; width: 30px; height: 30px; cursor: pointer; transform: scale(1.2, 1.2);');
+    attr(cls, 'style', 'grid-area: 1 / 3; width: 30px; height: 30px; cursor: pointer; transform: scale(1.2, 1.2); float: right;');
     cls.innerHTML = svgs.close;
     cls.onmouseenter = aninCloseBtn;
     cls.onmouseleave = anoutCloseBtn;
@@ -253,10 +253,10 @@ function runSearch(){
 ? 'location%3A%22'+lc.value+'%22' : lc && lc.value 
 ? 'location%3A'+lc.value : '';
 
-  var folw = fl && fl.value ? `+followers%3${fl.value}` : '';
+  var folw = fl && fl.value ? `+followers%3A${fl.value}` : '';
   var repo = rp && rp.value ? `+repos%3A${rp.value}` : '';
   var lang = lg && lg.value ? `+language%3A${lg.value}` : '';
-  var out = `https://github.com/search?q=`+name+geo+repo+lang+`&type=Users&ref=advsearch`;
+  var out = (`https://github.com/search?q=`+name+geo+repo+lang+folw+`&type=Users&ref=advsearch`).replace(/\=\+/, '=');
   if(gi(document,'langOptions_container')) gi(document,'langOptions_container').outerHTML = '';
   window.open(out);
 }
