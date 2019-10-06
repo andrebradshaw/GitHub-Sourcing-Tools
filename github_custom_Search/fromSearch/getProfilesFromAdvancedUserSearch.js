@@ -197,7 +197,7 @@ async function loopGitSearch(){
     for(var i=1; i<=loops; i++){
       var uri = t_url+'&p='+i;
       var doc2 = await gitSearch(uri);
-      var item2 = Array.from(cn(doc2,'user-list-info')).map(el => reg(/(?<=github.com\/).+/.exec(tn(el,'a')[0].href),0));
+      var item2 = Array.from(cn(doc2,'user-list-item')).map(el => reg(/(?<=github.com\/).+/.exec(tn(el,'a')[0].href),0));
       item2.forEach(el=> containArr.push(el));
       await delay(rando(1050)+1500);
       if(i == 25 || i == 50 || i == 75 || i == 100) await delay(rando(8050)+11000);
@@ -207,7 +207,7 @@ async function loopGitSearch(){
       for(var i=1; i<=loops; i++){
         var uri = t_url+'&p='+i;
         var doc2 = await gitSearch(uri.replace(/o=desc/, 'o=asc'));
-        var item2 = Array.from(cn(doc2,'user-list-info')).map(el => reg(/(?<=github.com\/).+/.exec(tn(el,'a')[0].href),0));
+        var item2 = Array.from(cn(doc2,'user-list-item')).map(el => reg(/(?<=github.com\/).+/.exec(tn(el,'a')[0].href),0));
         item2.forEach(el=> containArr.push(el));
         await delay(rando(1050)+1500);
         if(i == 25 || i == 50 || i == 75 || i == 100) await delay(rando(8050)+11000);
