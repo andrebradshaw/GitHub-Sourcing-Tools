@@ -1,7 +1,6 @@
 /*
 Still under development
 */
-
 var reg = (o, n) => o ? o[n] : '';
 var cn = (o, s) => o ? o.getElementsByClassName(s) : console.log(o);
 var tn = (o, s) => o ? o.getElementsByTagName(s) : console.log(o);
@@ -15,9 +14,24 @@ var reChar = (s) => s.match(/&#.+?;/g) && s.match(/&#.+?;/g).length > 0 ? s.matc
 
 
 async function initCodeLooper(){
+  var pathContainArr = [];
   var currentSearch = window.location.href;
-  getCodeSearchResPage(currentSearch);
+  var nextObj = await getCodeSearchResPage(currentSearch);
+  var totalResults = reg(/Showing ([\d,]+) available code results/.exec(document.body.innerText),1);
+  var totalPages = totalResults ? parseInt(totalResults.replace(/\D+/g,'')) / 10 : 0;
+  var nextUrl = nextObj.next;
+  var paths = nextObj.paths;
+  paths.forEach(el=> pathContainArr.push(el));
 
+  for(var i=2; i<totalPages; i++){
+    var res = await getCodeSearchResPage(nextUrl);
+	nextObj = res;
+	nextUrl = nextObj.next;
+ 	paths = nextObj.paths;
+	await delay(rando(1000)+1000);
+    paths.forEach(el=> pathContainArr.push(el));
+  }
+console.log(pathContainArr);
 }
 
 async function getCodeSearchResPage(url){
@@ -27,7 +41,8 @@ async function getCodeSearchResPage(url){
   var next = getNextPageUrl(doc);
   var paths = getUserPath(doc);
   console.log(next);
-  console.log(paths);  
+  console.log(paths); 
+  return {next: next, paths: paths}; 
 }
 
 function getUserPath(doc){
