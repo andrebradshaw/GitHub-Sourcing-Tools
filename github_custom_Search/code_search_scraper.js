@@ -167,11 +167,26 @@ async function loopThroughRepos(path) {
   var owns = parseRepo(res, 'source');
   var forks = parseRepo(res, 'fork');
   var vcard = cn(res, 'vcard-details ')[0] ? Array.from(tn(cn(res, 'vcard-details ')[0], 'li')) : null;
+
+  var bio = cn(res,'p-note user-profile-bio js-user-profile-bio')[0] ? cn(res,'p-note user-profile-bio js-user-profile-bio')[0].innerText.trim() : '';
+
+  var contributions = cn(mainDoc,'graph-before-activity-overview')[0] ? Array.from(cn(cn(mainDoc,'graph-before-activity-overview')[0],'day')).map(el=> {return {date: new Date(el.getAttribute('data-date')).getTime(), commits: parseInt(el.getAttribute('data-count'))}}).filter(el=> el.commits) : null;
+
+  var fullname = cn(res,'vcard-fullname')[0] ? cn(res,'vcard-fullname')[0].innerText : '';
+  var geo = vcard ? prop(vcard,'homeLocation') : null;
+
   var email = vcard ? prop(vcard, 'email') : null;
   var website = vcard ? prop(vcard, 'url') : null;
   var worksFor = vcard ? prop(vcard, 'worksFor') : null;
   var followers = getFollowCounts(res, /followers/i);
   var following = getFollowCounts(res, /following/i);
+  var commits = cn(mainDoc, 'graph-before-activity-overview')[0] ? Array.from(cn(cn(mainDoc, 'graph-before-activity-overview')[0], 'day')).map(el => {
+    return {
+      date: new Date(el.getAttribute('data-date')).getTime(),
+      commits: parseInt(el.getAttribute('data-count'))
+    }
+  }).filter(el => el.commits) : null;
+
   var bio = cn(res, 'p-note user-profile-bio js-user-profile-bio')[0] ? cn(res, 'p-note user-profile-bio js-user-profile-bio')[0].innerText.trim() : '';
   var contributions = cn(mainDoc, 'graph-before-activity-overview')[0] ? Array.from(cn(cn(mainDoc, 'graph-before-activity-overview')[0], 'day')).map(el => {
     return {
@@ -205,6 +220,8 @@ async function loopThroughRepos(path) {
   var recognized = owns.filter(el => (el.forks > 0 || el.stars > 0) && el.lang).sort((a, b) => b.time - a.time);
   var lastActive = owns && owns.length > 0 ? new Date(Math.max(...owns.map(el => el.time))) : 'never';
   var profile = {
+	fullname: fullname,
+	geo: geo,
     email: email && email.length > 0 ? unq(email).toString() : null,
     langs: langs && langs.length > 0 ? langs : null,
     website: website && website.length > 0 ? website.toString() : null,
@@ -217,7 +234,12 @@ async function loopThroughRepos(path) {
     recognized: recognized && recognized.length > 0 ? recognized : null,
     contributions: contributions && contributions.length > 0 ? contributions : null,
     totalCommits: contributions && contributions.length > 0 ? contributions.map(el => el.commits).reduce((a, b) => a + b) : null,
-    lastActive: lastActive
+    lastActive: lastActive,
+    bio: cn(mainDoc, 'p-note user-profile-bio js-user-profile-bio')[0] ? cn(mainDoc, 'p-note user-profile-bio js-user-profile-bio')[0].innerText.trim() : '',
+    num_commits: commits && commits.length ? commits.map(el => el.commits).reduce((a, b) => a + b) : null,
+    percent_active: commits && commits.length ? Math.round((commits.length / (365 - (8 - new Date().getDay()))) * 1000) / 10 : '',
+    langs: langs,
+    link: reg(/(?<=^.+?github\.com\/).+?(?=\/|\?|$)/.exec(window.location.href),0)
   };
   return cleanObject(profile);
 }
