@@ -134,7 +134,7 @@ function mapLangPerc(arr) {
     };
     containArr.push(out)
   }
-  console.log(containArr)
+  console.log(containArr);
   return containArr.sort((a, b) => a.percent - b.percent).reverse();
 }
 
