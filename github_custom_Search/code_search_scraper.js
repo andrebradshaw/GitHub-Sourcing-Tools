@@ -221,7 +221,8 @@ async function loopThroughRepos(path) {
   var lastActive = owns && owns.length > 0 ? new Date(Math.max(...owns.map(el => el.time))) : 'never';
   var profile = {
 	fullname: fullname,
-	geo: geo,
+	path_id: path,
+    location: geo ? geo.toString() : null,
     email: email && email.length > 0 ? unq(email).toString() : null,
     langs: langs && langs.length > 0 ? langs : null,
     website: website && website.length > 0 ? website.toString() : null,
@@ -239,7 +240,7 @@ async function loopThroughRepos(path) {
     num_commits: commits && commits.length ? commits.map(el => el.commits).reduce((a, b) => a + b) : null,
     percent_active: commits && commits.length ? Math.round((commits.length / (365 - (8 - new Date().getDay()))) * 1000) / 10 : '',
     langs: langs,
-    link: reg(/(?<=^.+?github\.com\/).+?(?=\/|\?|$)/.exec(window.location.href),0)
+    link: 'https://www.github.com/'+path
   };
   return cleanObject(profile);
 }
