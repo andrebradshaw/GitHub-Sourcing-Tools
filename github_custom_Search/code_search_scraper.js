@@ -1,6 +1,3 @@
-/*
-Still under development
-*/
 var reg = (o, n) => o ? o[n] : '';
 var cn = (o, s) => o ? o.getElementsByClassName(s) : console.log(o);
 var tn = (o, s) => o ? o.getElementsByTagName(s) : console.log(o);
@@ -14,17 +11,19 @@ var reChar = (s) => s.match(/&#.+?;/g) && s.match(/&#.+?;/g).length > 0 ? s.matc
 
 
 async function initCodeLooper(){
+  var totalResults = reg(/Showing ([\d,]+) available code results/.exec(document.body.innerText),1);
+  var totalPages = totalResults ? Math.floor(parseInt(totalResults.replace(/\D+/g,'')) / 10) : 0;
+  createHTML(totalPages);
   var pathContainArr = [];
   var currentSearch = window.location.href;
   var nextObj = await getCodeSearchResPage(currentSearch);
-  var totalResults = reg(/Showing ([\d,]+) available code results/.exec(document.body.innerText),1);
-  var totalPages = totalResults ? Math.floor(parseInt(totalResults.replace(/\D+/g,'')) / 10) : 0;
   var nextUrl = nextObj.next;
   var paths = nextObj.paths;
   if(paths && paths.length) paths.forEach(el=> pathContainArr.push(el));
 
   for(var i=2; i<totalPages; i++){
     var res = await getCodeSearchResPage(nextUrl);
+    gi(document,'code_status').innerHTML = `Pulling user paths. Page ${i} of ${totalPages}.`;
 	nextObj = res;
 	nextUrl = nextObj.next;
  	paths = nextObj.paths;
@@ -39,10 +38,43 @@ async function loopThroughUsers(){
   var containArr = [];
   var userpaths = await initCodeLooper();
   for(var i=0; i<userpaths.length; i++){
+    gi(document,'code_status').innerHTML = `Pulling user data. ${i+1} of ${userpaths.length}.`;
+    gi(document,'code_current').innerHTML = `Currently on user path ${userpaths[i]}.`;
     var userData = await loopThroughRepos(userpaths[i]);
     containArr.push(userData);
   }
-console.log(containArr);
+    gi(document,'code_status').innerHTML = `Scrape completed.`;
+    gi(document,'code_current').innerHTML = `Dowload as TSV or JSON file.`;
+  var cont = gi(document,'code_scrape_container');
+  var tsv = convertToTSV(containArr);
+
+  var btnCont = ele('div');
+  attr(btnCont,'style',`display:grid; grid-template-column: 49% 49%; grid-gap: 2%; border: 1px solid transparent; border-radius: 0.3em;`);
+  cont.appendChild(btnCont);
+
+  var tsvBtn = ele('div');
+  attr(tsvBtn,'id','dl_tsv_btn');
+  attr(tsvBtn,'style',`grid-area: 1/1; background: #004471; color: #fff; border: 1px solid transparent; border-radius: 0.3em; padding: 6px; text-align: center; cursor: pointer;`);
+  btnCont.appendChild(tsvBtn);
+  tsvBtn.innerText = 'Download TSV';
+  tsvBtn.onclick = ()=>{
+	downloadr(tsv,'code_search_profiles.tsv');
+  };
+  tsvBtn.mouseenter = ()=> {tsvBtn.style.background = '#035185';};
+  tsvBtn.mouseleave = ()=> {tsvBtn.style.background = '#004471';};  
+
+  var jsonBtn = ele('div');
+  attr(jsonBtn,'id','dl_tsv_btn');
+  attr(jsonBtn,'style',`grid-area: 1/2; background: #004471; color: #fff; border: 1px solid transparent; border-radius: 0.3em; padding: 6px; text-align: center;  cursor: pointer;`);
+  btnCont.appendChild(jsonBtn);
+  jsonBtn.innerText = 'Download JSON';
+  jsonBtn.onclick = ()=>{
+    downloadr(containArr,'code_search_profiles.json');
+  };
+  jsonBtn.mouseenter = ()=> {jsonBtn.style.background = '#035185';};
+  jsonBtn.mouseleave = ()=> {jsonBtn.style.background = '#004471';}; 
+
+  console.log(containArr);
 }
 
 
@@ -52,8 +84,6 @@ async function getCodeSearchResPage(url){
   var doc = new DOMParser().parseFromString(text,'text/html');
   var next = getNextPageUrl(doc);
   var paths = getUserPath(doc);
-  console.log(next);
-  console.log(paths); 
   return {next: next, paths: paths}; 
 }
 
@@ -67,8 +97,6 @@ function getNextPageUrl(doc){
   return next.length ? next[0].href : null;
 }
 
-
-
 var dateString = (s) => new Date(s).toString().replace(/^\S+/, '').replace(/\d\d:\d\d.+/, '').trim().replace(/(?<=[a-zA-Z]{3})\s\d+/, '');
 var parseYearMonths = (n) => {
   var m = n / 2629800000;
@@ -76,11 +104,6 @@ var parseYearMonths = (n) => {
   var months = Math.round(12 * ((m / 12) - years));
   var str = months && years ? `${years} yr${years>1?'s':''} ${months} mo${months>1?'s':''}` : years && months == 0 ? `${years} year${years>1?'s':''}` : `${months} month${months>1?'s':''}`;
   return str;
-};
-
-var svgs = {
-  close: `<svg x="0px" y="0px" viewBox="0 0 100 100"><g style="transform: scale(0.85, 0.85)" stroke-width="1" fill="none" fill-rule="evenodd" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(2, 2)" stroke="#e21212" stroke-width="8"><path d="M47.806834,19.6743435 L47.806834,77.2743435" transform="translate(49, 50) rotate(225) translate(-49, -50) "/><path d="M76.6237986,48.48 L19.0237986,48.48" transform="translate(49, 50) rotate(225) translate(-49, -50) "/></g></g></svg>`,
-  li: `<svg viewBox="0 0 98 98"><g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" sketch:type="MSPage"><g sketch:type="MSLayerGroup" /><g transform="translate(20, 2)"; sketch:type="MSLayerGroup" stroke="#314E55" stroke-width="2" fill="#81A4E3"><g sketch:type="MSShapeGroup"><path d="M35.9955151,27.6266598 C35.9955151,23.8394326 33.0511715,20.8297982 29.7726613,20.8297982 C27.2676024,20.8297982 25.0529201,20.8297982 23.5815904,23.9999995 C23.3099556,24.5852775 22.9955155,26.2895184 22.9955155,27.1324171 L22.9955155,43.4999995 L15.036777,43.4999989 L15.0367767,22.7102582 L15.0367767,12.455873 L23.3012671,12.455873 L23.7089346,16.5 L23.8873426,16.5 C25.0805776,14.5783603 27.7924258,12.455873 32.6850041,12.455873 C38.6490801,12.455873 43.9955153,17.1766025 43.9955153,25.8297979 L43.9955153,43.4999995 L35.9955151,43.4999995 L35.9955151,27.6266598 Z M4.32081087,8.76648024 C1.71699591,8.76648024 0.036776724,6.92405932 0.036776724,4.64751022 C0.036776724,2.3156217 1.7713812,0.525677812 4.42767319,0.525677812 C7.08396519,0.525677812 8.71170734,2.31466757 8.76609263,4.64751022 C8.76704675,6.92405932 7.08491932,8.76648024 4.32081087,8.76648024 L4.32081087,8.76648024 Z M0.995515537,43.4999995 L0.995515303,12.4558734 L7.98371812,12.4558737 L7.98371835,43.4999999 L0.995515537,43.4999995 Z"/></g></g></g></svg>`
 };
 
 function mapLangPerc(arr) {
@@ -202,7 +225,7 @@ async function loopThroughRepos(path) {
     parseRepo(res2, 'source').forEach(el => owns.push(el));
   }
   if ((email == null || email.length == 0) && owns[0]) {
-    for (var r = (owns.length - 1); r > ((owns.length - 5) || -1); r--) { //starts from oldest repo since this is most likely to have an email
+    for (var r = (owns.length - 1); r > ((owns.length - 5) || -1); r--) { 
       var link = `https://github.com/${path}/${owns[r].repo}/commit/master.patch`;
       var patchEmail = await getPatches(link);
       console.log(`${r} of ${owns.length-1}`);
@@ -243,6 +266,74 @@ async function loopThroughRepos(path) {
     link: 'https://www.github.com/'+path
   };
   return cleanObject(profile);
+}
+
+function convertToTSV(fileArray) {
+  var firstLevel = fileArray.map(el => Object.entries(el));
+  var lens = Math.max(...firstLevel.map(el => el.length));
+  var header = unq(firstLevel.map(el => el.map(itm => itm[0])).flat());
+  var table = [header];
+  var str = (o) => typeof o == 'object' ? JSON.stringify(o).replace(/\n|\r/g, ' ') : o.toString().replace(/\n|\r/g, ' ');
+  for (var i = 0; i < firstLevel.length; i++) {
+    var arr = [];
+    var row = [];
+    for (var s = 0; s < firstLevel[i].length; s++) {
+      var place = header.indexOf(firstLevel[i][s][0]);
+      arr[place] = firstLevel[i][s][1];
+    }
+    for (var a = 0; a < arr.length; a++) {
+      if (arr[a]) {
+        row.push(arr[a]);
+      } else {
+        row.push('');
+      }
+    }
+    table.push(row);
+  }
+  var output = table.map(el => el.map(itm => str(itm)));
+  return output;
+}
+
+  function downloadr(arr2D, filename) {
+    var data = /\.json$|.js$/.test(filename) ? JSON.stringify(arr2D) : arr2D.map(el => el.reduce((a, b) => a + '\t' + b)).reduce((a, b) => a + '\r' + b);
+    var type = /\.json$|.js$/.test(filename) ? 'data:application/json;charset=utf-8,' : 'data:text/plain;charset=utf-8,';
+    var file = new Blob([data], {
+      type: type
+    });
+    if (window.navigator.msSaveOrOpenBlob) {
+      window.navigator.msSaveOrOpenBlob(file, filename);
+    } else {
+      var a = document.createElement('a'),
+        url = URL.createObjectURL(file);
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      }, 10);
+    }
+  }
+
+function createHTML(pages){
+  if(gi(document,'code_scrape_container')) gi(document,'code_scrape_container').outerHTML = '';
+  var cont = ele('div');
+  attr(cont,'style',`position: fixed; top: 10%; left: 33%; width: 400px; padding: 6px;`);
+  attr(cont,'id','code_scrape_container');
+  document.body.appendChild(cont);
+  
+  var status = ele('div');
+  attr(status,'id','code_status');
+  attr(status,'style',`background: #fff; color: #004471; border: 1px solid #004471; border-top-right-radius: 0.3em; border-top-left-radius: 0.3em; padding: 6px;`);
+  cont.appendChild(status);
+  status.innerText = `Pulling users from ${pages} pages...`;
+
+  var current = ele('div');
+  attr(current,'id','code_current');
+  attr(current,'style',`background: #fff; color: #004471; border: 1px solid #004471; border-bottom-right-radius: 0.3em; border-bottom-left-radius: 0.3em; padding: 6px;`);
+  cont.appendChild(current);
+
 }
 
 loopThroughUsers()
