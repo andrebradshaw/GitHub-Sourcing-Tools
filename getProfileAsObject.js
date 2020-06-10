@@ -13,12 +13,12 @@ var unqHsh = (a, o) => a.filter(i => o.hasOwnProperty(i) ? false : (o[i] = true)
 var prop = (arr, str) => unqHsh(arr.filter(el => el.getAttribute('itemprop') == str).map(el => el ? el.innerText.trim() : '').filter(r=> r),{});
 //   var res = await getProfileRepoData();
 
-async function getProfileRepoData(path) {
+async function gihubProfileObject(path) {
   var res = await fetch(`https://github.com/${path}?tab=repositories`);
   var text = await res.text();
   var res = new DOMParser().parseFromString(text, 'text/html');
   let all = Array.from(res.querySelectorAll('*'));  
-  var items = [['name','full_name'],['additionalName','profule_path'],['homeLocation','location'],['worksFor','employer'],['url','url'],['email','email']];
+  var items = [['name','full_name'],['additionalName','profile_path'],['homeLocation','location'],['worksFor','employer'],['url','url'],['email','email']];
   var obj = {};
   items.forEach(r=> {
     var val = prop(all, r[0]);
@@ -27,5 +27,5 @@ async function getProfileRepoData(path) {
   console.log(obj);
 }
 
-getProfileRepoData('sucharithmenon');
+gihubProfileObject('sucharithmenon');
 
