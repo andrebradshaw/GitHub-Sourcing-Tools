@@ -1,3 +1,4 @@
+  
 var reg = (o, n) => o ? o[n] : '';
 var cn = (o, s) => o ? o.getElementsByClassName(s) : console.log(o);
 var tn = (o, s) => o ? o.getElementsByTagName(s) : console.log(o);
@@ -24,8 +25,14 @@ async function gihubProfileObject(path) {
     var val = prop(all, r[0]);
     if(val.length) obj[r[1]] = val[0];
   });
-  console.log(obj);
+  return obj;
 }
 
-gihubProfileObject('sucharithmenon');
+async function getGithubProfileData(){
+  var path = reg(/(?<=github.com\/).+?(?=\/|$)/.exec(window.location.href),0);
+  var obj = await gihubProfileObject(path);
+  console.log(obj);
 
+}
+
+getGithubProfileData()
