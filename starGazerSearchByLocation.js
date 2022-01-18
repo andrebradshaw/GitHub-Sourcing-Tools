@@ -221,12 +221,33 @@ async function downloadr(str, name) {
   window.URL.revokeObjectURL(url);
 }
 
-async function getHoverCard(userId,geoSearch){
-  var res = await fetch("https://github.com/hovercards?user_id="+userId, {"credentials":"include","headers":{"accept":"*/*","accept-language":"en-US,en;q=0.9","x-requested-with":"XMLHttpRequest"}});
-  var text = await res.text();
-  var doc = new DOMParser().parseFromString(text, 'text/html');
-  return geoSearch.test(doc.body.innerText);
+async function getHoverCard(params,geoSearch){
+    var {user_path,repo_id,current_path} = params;
+
+    var res = await fetch(`https://github.com/users/${user_path}/hovercard?subject=repository%3A${repo_id}&current_path=${current_path}`, {
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "en-US,en;q=0.9",
+        "sec-ch-ua": "\" Not;A Brand\";v=\"99\", \"Microsoft Edge\";v=\"97\", \"Chromium\";v=\"97\"",
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": "\"Windows\"",
+        "sec-fetch-dest": "empty",
+        "sec-fetch-mode": "cors",
+        "sec-fetch-site": "same-origin",
+        "x-requested-with": "XMLHttpRequest"
+      },
+      "referrer": "https://github.com/bilibili/flv.js/",
+      "referrerPolicy": "no-referrer-when-downgrade",
+      "body": null,
+      "method": "GET",
+      "mode": "cors",
+      "credentials": "include"
+    });
+    var text = await res.text();
+    return geoSearch.test(text);
 }
+
+
 
 async function getNumOfStarGazers(url){
   var res = await fetch(url);
@@ -242,12 +263,22 @@ async function getStarGazers(url,geoSearch){
   var text = await res.text();
   var doc = new DOMParser().parseFromString(text, 'text/html');
   var repositoryCont = cn(doc, 'repository-content')[0];
-  var followers = cn(repositoryCont,'follow-list-name') ? Array.from(cn(repositoryCont,'follow-list-name'))
-.map(i=> [tn(i, 'a')[0].getAttribute('data-hovercard-url').replace(/\D+/g, ''), tn(i, 'a')[0].href]) : [];
+  var followers = tn(repositoryCont,'li')?.length ? Array.from(tn(repositoryCont,'li')).map(i=> 
+    [
+        /(?<=github.com\/).+/.exec(i.getElementsByTagName('a')?.[0]?.href)?.[0],
+        i.getElementsByTagName('a')?.[0]?.href
+
+    ]
+  ) : [];
+
   var filteredFollowers = [];
 
   for(var i=0; i<followers.length; i++){
-    var isMatch = await getHoverCard(followers[i][0],geoSearch);
+    let isMatch = await getHoverCard({
+        user_path:followers[i][0],
+        repo_id:Array.from(doc.getElementsByTagName('summary')).map(p=> JSON.parse(p.getAttribute('data-hydro-click'))).filter(p=> p?.payload?.repository_id)?.[0]?.payload?.repository_id,
+        current_path:encodeURIComponent(/(?<=github.com)\/.+/.exec(url)?.[0])
+    },geoSearch);
     if(isMatch) filteredFollowers.push(followers[i][1]);
   }
   var pages = cn(doc,'paginate-container')[0] ? Array.from(tn(cn(doc,'paginate-container')[0],'a')) : null;
@@ -317,8 +348,8 @@ async function downloadCSVofMatches(url,geoSearch) {
   var temp = [
     ['Full Name', 'Company', 'Location', 'Email', 'Github Url']
   ];
-  for (var i = 0; i < resArr.length; i++) {
-    var row = await getProfileDetails(resArr[i], geoSearch);
+  for (let i = 0; i < resArr.length; i++) {
+    let row = await getProfileDetails(resArr[i], geoSearch);
     if(row.length > 0) temp.push(row);
   }
   downloadr(csvTable(temp), filename + '.csv');
