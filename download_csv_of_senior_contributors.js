@@ -230,7 +230,7 @@ setQuickliCSS('quickli_options_container_main');
       let follow_hrefs = Array.from(doc.getElementsByTagName('a'))?.filter(i=> /tab\=follow/.test(i.href));
       var email_check = await getEmailFromProfile(url);
       var email = email_check && /noreply/i.test(email_check) === false ? email_check : '';
-      let vcards = Array.from(Array.from(doc.getElementsByTagName('ul')).filter(i=> i.getAttribute('class') == 'vcard-details')?.[0]?.getElementsByTagName('li')).map(li=> {
+      let vcards = Array.from(Array.from(doc.getElementsByTagName('ul')).filter(i=> i.getAttribute('class') == 'vcard-details')?.[0]?.getElementsByTagName('li'))?.filter(li=> li.getAttribute('itemprop'))?.map(li=> {
         return {
           [snakeCaser(li.getAttribute('itemprop'))]:li.innerText?.trim()?.replace(/^.+?\n/,'')?.trim()
         }
